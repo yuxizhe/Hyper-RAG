@@ -5,7 +5,6 @@ import json
 import aioboto3
 import aiohttp
 import numpy as np
-import ollama
 
 from openai import (
     AsyncOpenAI,
@@ -425,16 +424,6 @@ async def bedrock_embedding(
             raise ValueError(f"Model provider '{model_provider}' is not supported!")
 
         return np.array(embed_texts)
-
-
-async def ollama_embedding(texts: list[str], embed_model, **kwargs) -> np.ndarray:
-    embed_text = []
-    ollama_client = ollama.Client(**kwargs)
-    for text in texts:
-        data = ollama_client.embeddings(model=embed_model, prompt=text)
-        embed_text.append(data["embedding"])
-
-    return embed_text
 
 
 class Model(BaseModel):

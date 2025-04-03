@@ -1,13 +1,9 @@
 accelerate
 aioboto3
 aiohttp
-graspologic
-hnswlib
 nano-vectordb
-ollama
 openai
-pyvis
 tenacity
 tiktoken
 xxhash
-hypergraph-DB
+hypergraph-db
