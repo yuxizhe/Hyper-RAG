@@ -1,6 +1,6 @@
-<div align="center" id="top"> 
+<!-- <div align="center" id="top"> 
   <img src="./assets/hg.svg" alt="Hypergraph" width="100%" />
-</div>
+</div> -->
 
 <h1 align="center">Hyper-RAG</h1>
 
@@ -23,7 +23,7 @@
 <p align="center">
   <a href="#dart-about">About</a> &#xa0; | &#xa0; 
   <a href="#sparkles-features">Features</a> &#xa0; | &#xa0;
-  <a href="#rocket-technologies">Technologies</a> &#xa0; | &#xa0;
+  <a href="#rocket-installation">Installation</a> &#xa0; | &#xa0;
   <a href="#white_check_mark-requirements">Requirements</a> &#xa0; | &#xa0;
   <a href="#checkered_flag-starting">Starting</a> &#xa0; | &#xa0;
   <a href="#memo-license">License</a> &#xa0; | &#xa0;
@@ -36,7 +36,7 @@
 <div align="center">
   <img src="./assets/many_llms_all.svg" alt="Overall Performance" width="100%" />
 </div>
-We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods.
+We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset.
 
 ## :dart: About ##
 
@@ -48,7 +48,7 @@ Describe your project
 :heavy_check_mark: Feature 2;\
 :heavy_check_mark: Feature 3;
 
-## :rocket: Install ##
+## :rocket: Installation ##
 
 The following tools were used in this project:
 
