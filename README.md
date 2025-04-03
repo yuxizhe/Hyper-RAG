@@ -86,7 +86,8 @@ $ yarn start
 
 This project is under license from Apache 2.0. For more details, see the [LICENSE](LICENSE.md) file.
 
-Hyper-RAG is maintained by [iMoon-Lab](http://moon-lab.tech/), Tsinghua University. If you have any questions, please feel free to contact us via email: [Yifan Feng](mailto:evanfeng97@gmail.com). Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/yifanfeng97" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Yifan Zhang</a>.
+Hyper-RAG is maintained by [iMoon-Lab](http://moon-lab.tech/), Tsinghua University. 
+If you have any questions, please feel free to contact us via email: [Yifan Feng](mailto:evanfeng97@gmail.com). Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/yifanfeng97" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Yifan Zhang</a>.
 
 This repo benefits from [LightRAG](https://github.com/HKUDS/LightRAG).  Thanks for their wonderful works.
 
