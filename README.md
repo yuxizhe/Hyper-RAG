@@ -36,7 +36,7 @@
 <div align="center">
   <img src="./assets/many_llms_all.svg" alt="Overall Performance" width="100%" />
 </div>
-We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. Our paper is available at <a href="https://github.com/iMoonLab/Hyper-RAG/blob/main/assets/Hyper-RAG.pdf">here</a>.
+We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. **Our paper is available at** <a href="https://github.com/iMoonLab/Hyper-RAG/blob/main/assets/Hyper-RAG.pdf">here</a>.
 
 ## :dart: About
 
@@ -95,7 +95,7 @@ pip install -r requirements.txt
 ## :white_check_mark: Quick Start
 
 ### Configure your LLM API
-Copy the `config_temp.py` file to `my_config.py` and set your LLM URL and KEY.
+Copy the `config_temp.py` file to `my_config.py` in the root folder and set your LLM `URL` and `KEY`.
 
 ```python
 LLM_BASE_URL = "Yours xxx"
