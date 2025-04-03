@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./assets/hg.svg" alt="Hypergraph" />
+  <img src="./assets/many_llms_all.svg" alt="Hypergraph" />
 </div>
 
 <h1 align="center">Hyper-RAG</h1>
@@ -39,6 +39,10 @@
 </p>
 
 <br>
+
+<div align="center">
+  <img src="./assets/hg.svg" alt="Hyper-RAG" />
+</div>
 
 ## :dart: About ##
 
@@ -86,7 +90,8 @@ $ yarn start
 
 This project is under license from Apache 2.0. For more details, see the [LICENSE](LICENSE.md) file.
 
-Hyper-RAG is maintained by [iMoon-Lab](http://moon-lab.tech/), Tsinghua University.  Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/yifanfeng97" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Yifan Zhang</a>. 
+Hyper-RAG is maintained by [iMoon-Lab](http://moon-lab.tech/), Tsinghua University. 
+Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/yifanfeng97" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Yifan Zhang</a>. 
 
 If you have any questions, please feel free to contact us via email: [Yifan Feng](mailto:evanfeng97@gmail.com). 
 

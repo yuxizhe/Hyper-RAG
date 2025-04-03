@@ -23,7 +23,6 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from pydantic import BaseModel, Field
 from typing import List, Dict, Callable, Any
 from .base import BaseKVStorage
