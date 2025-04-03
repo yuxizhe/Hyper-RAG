@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./assets/many_llms_all.svg" alt="Hypergraph" width="100%" />
+  <img src="./assets/hg.svg" alt="Hypergraph" width="100%" />
 </div>
 
 <h1 align="center">Hyper-RAG</h1>
@@ -20,14 +20,6 @@
   <img alt="Github stars" src="https://img.shields.io/github/stars/iMoonLab/Hyper-RAG?color=purple" />
 </p>
 
-<!-- Status -->
-
-<!-- <h4 align="center"> 
-	🚧  HyperRAG Main 🚀 Under construction...  🚧
-</h4> 
-
-<hr> -->
-
 <p align="center">
   <a href="#dart-about">About</a> &#xa0; | &#xa0; 
   <a href="#sparkles-features">Features</a> &#xa0; | &#xa0;
@@ -40,9 +32,11 @@
 
 <br>
 
+
 <div align="center">
-  <img src="./assets/hg.svg" alt="Hyper-RAG" width="100%" />
+  <img src="./assets/many_llms_all.svg" alt="Overall Performance" width="100%" />
 </div>
+We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods.
 
 ## :dart: About ##
 
@@ -54,7 +48,7 @@ Describe your project
 :heavy_check_mark: Feature 2;\
 :heavy_check_mark: Feature 3;
 
-## :rocket: Technologies ##
+## :rocket: Install ##
 
 The following tools were used in this project:
 
@@ -64,11 +58,10 @@ The following tools were used in this project:
 - [React Native](https://reactnative.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 
-## :white_check_mark: Requirements ##
+## :white_check_mark: Quick Start ##
 
 Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Node](https://nodejs.org/en/) installed.
 
-## :checkered_flag: Starting ##
 
 ```bash
 # Clone this project
@@ -85,6 +78,9 @@ $ yarn start
 
 # The server will initialize in the <http://localhost:3000>
 ```
+
+## :checkered_flag: Evaluation ##
+eee
 
 ## :memo: License ##
 
