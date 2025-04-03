@@ -60,7 +60,7 @@ if __name__ == "__main__":
     data_name = 'mix'
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--input_dir", type=str, default=f"datasets/{data_name}/jsonl_contexts"
+        "-i", "--input_dir", type=str, default=f"datasets/{data_name}"
     )
     parser.add_argument(
         "-o", "--output_dir", type=str, default=f"caches/{data_name}/contexts"

@@ -71,20 +71,51 @@ Example of hypergraph modeling for entity space. Hypergraph can model the beyond
 :heavy_check_mark: **Native Hypergraph-DB Integration**: Employs the native hypergraph database, <a href="https://github.com/iMoonLab/Hypergraph-DB">Hypergraph-DB</a>, as the foundation, supporting rapid retrieval of higher-order associations.;\
 :heavy_check_mark: **Superior Performance**: Hyper-RAG outperforms Graph RAG and Light RAG by 6.3% and 6.0% respectively.;\
 :heavy_check_mark: **Broad Validation**: Across nine diverse datasets, Hyper-RAG shows a 35.5% performance improvement over Light RAG based on a selection-based assessment.;\
-:heavy_check_mark: **Efficiency**: The lightweight variant, Hyper-RAG-Lite, achieves twice the retrieval speed and a 3.3% performance boost compared to Light RAG.;\
+:heavy_check_mark: **Efficiency**: The lightweight variant, Hyper-RAG-Lite, achieves twice the retrieval speed and a 3.3% performance boost compared to Light RAG.;
 
 ## :rocket: Installation
 
-The following tools were used in this project:
 
-- [Expo](https://expo.io/)
-- [Node.js](https://nodejs.org/en/)
-- [React](https://pt-br.reactjs.org/)
-- [React Native](https://reactnative.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
+```bash
+# Clone this project
+git clone https://github.com/iMoonLab/Hyper-RAG.git
+
+# Access
+cd Hyper-RAG
+
+# Install dependencies
+pip install -r requirements.txt
+```
 
 ## :white_check_mark: Quick Start
 
+### Configure your LLM API
+Copy the `config_temp.py` file to `my_config.py` and set your LLM URL and KEY.
+
+```python
+LLM_BASE_URL = "Yours xxx"
+LLM_API_KEY = "Yours xxx"
+LLM_MODEL = "gpt-4o-mini"
+
+EMB_BASE_URL = "Yours xxx"
+EMB_API_KEY = "Yours xxx"
+EMB_MODEL = "text-embedding-3-small"
+EMB_DIM = 1536
+```
+
+### Run the toy example
+
+```bash
+python example/hyperreg_demo.py
+```
+
+### Or Run by Steps
+
+1. Prepare the data. You can download the dataset from <a href="https://cloud.tsinghua.edu.cn/d/187386488d5c404a83a5/">here</a>. 
+
+```bash
+python example/preprocess.py
+```
 Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Node](https://nodejs.org/en/) installed.
 
 
