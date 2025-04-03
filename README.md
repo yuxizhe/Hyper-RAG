@@ -61,6 +61,7 @@ Schematic diagram of the proposed Hyper-RAG architecture. a, The patient poses a
   <img src="./assets/hg.svg" alt="Hypergraph" width="100%" />
 Example of hypergraph modeling for entity space. Hypergraph can model the beyond-pairwise relationship among entities, which is more powerful than the pairwise relationship in traditional graph modeling. With hypergraphs, we can avoid the information loss caused by the pairwise relationship.
 </div>
+<br>
 <div align="center"> 
   <img src="./assets/extract.svg" alt="Extract Hypergraph" width="100%" />
   Illustration of Entity and Correlation Extraction from Raw Corpus: Dark brown boxes represent entities, blue arrows denote low-order correlations between entities, and red arrows indicate high-order correlations. Yellow boxes contain the original descriptions of the respective entities or their correlations.
@@ -155,7 +156,7 @@ Scoring-Based Assessment is designed to facilitate the comparative evaluation of
 You can use the following command to use this evaluation method.
 
 ```bash
-python evaluate_by_scoring.py
+python evaluate/evaluate_by_scoring.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
@@ -169,7 +170,7 @@ Selection-Based Assessment is tailored for scenarios where preliminary candidate
 You can use the following command to use this evaluation method.
 
 ```bash
-python evaluate_by_selection.py
+python evaluate/evaluate_by_selection.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
