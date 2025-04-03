@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./assets/many_llms_all.svg" alt="Hypergraph" />
+  <img src="./assets/many_llms_all.svg" alt="Hypergraph" width="100%" />
 </div>
 
 <h1 align="center">Hyper-RAG</h1>
@@ -41,7 +41,7 @@
 <br>
 
 <div align="center">
-  <img src="./assets/hg.svg" alt="Hyper-RAG" />
+  <img src="./assets/hg.svg" alt="Hyper-RAG" width="100%" />
 </div>
 
 ## :dart: About ##
