@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./.github/app.gif" alt="HyperRAG Main" />
+  <img src="./assets/hg.jpg" alt="Hypergraph" />
 
   &#xa0;
 
