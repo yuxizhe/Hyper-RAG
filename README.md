@@ -56,10 +56,14 @@ Schematic diagram of the proposed Hyper-RAG architecture. a, The patient poses a
 <br>
 
 <details>
-<summary> <b>More details about hypergraphs</b> </summary>
+<summary> <b>More details about hypergraph modeling</b> </summary>
 <div align="center"> 
   <img src="./assets/hg.svg" alt="Hypergraph" width="100%" />
 Example of hypergraph modeling for entity space. Hypergraph can model the beyond-pairwise relationship among entities, which is more powerful than the pairwise relationship in traditional graph modeling. With hypergraphs, we can avoid the information loss caused by the pairwise relationship.
+</div>
+<div align="center"> 
+  <img src="./assets/extract.svg" alt="Extract Hypergraph" width="100%" />
+  Illustration of Entity and Correlation Extraction from Raw Corpus: Dark brown boxes represent entities, blue arrows denote low-order correlations between entities, and red arrows indicate high-order correlations. Yellow boxes contain the original descriptions of the respective entities or their correlations.
 </div>
 </details>
 
@@ -111,32 +115,74 @@ python example/hyperreg_demo.py
 
 ### Or Run by Steps
 
-1. Prepare the data. You can download the dataset from <a href="https://cloud.tsinghua.edu.cn/d/187386488d5c404a83a5/">here</a>. 
+1. Prepare the data. You can download the dataset from <a href="https://cloud.tsinghua.edu.cn/d/187386488d5c404a83a5/">here</a>. Put the dataset in the root direction. Then run the following command to preprocess the data.
 
 ```bash
-python example/preprocess.py
+python reproduce/Step_0.py
 ```
-Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Node](https://nodejs.org/en/) installed.
 
+2. Build the knowledge hypergraphs, and entity and relation vector database with following command.
 
 ```bash
-# Clone this project
-$ git clone https://github.com/iMoonLab/Hyper-RAG
-
-# Access
-$ cd Hyper-RAG
-
-# Install dependencies
-$ yarn
-
-# Run the project
-$ yarn start
-
-# The server will initialize in the <http://localhost:3000>
+python reproduce/Step_2.py
 ```
+
+3. Extract questions from the orignial datasets with following command.
+
+```bash
+python reproduce/Step_3_extract_question.py
+```
+
+Those questions are saved in the `cache/{{data_name}}/questions` folder. 
+
+4. Run the Hyper-RAG to response those questions with following command.
+
+```bash
+python reproduce/Step_4_response_question.py
+```
+
+Those response are saved in the `cache/{{data_name}}/response` folder.
+
+You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the Hyper-RAG or Hyper-RAG-Lite.
+
 
 ## :checkered_flag: Evaluation
-eee
+In this work, we propose two evaluation strategys: the **selection-based** and **scoring-based** evaluation. 
+
+### Scoring-based evaluation
+Scoring-Based Assessment is designed to facilitate the comparative evaluation of multiple model outputs by quantifying their performance across various dimensions. This approach allows for a nuanced assessment of model capabilities by providing scores on several key metrics. However, a notable limitation is its reliance on reference answers. In our preprocessing steps, we leverage the source chunks from which each question is derived as reference answers.
+
+You can use the following command to use this evaluation method.
+
+```bash
+python evaluate_by_scoring.py
+```
+The results of this evaluation are shown in the following figure.
+<div align="center">
+  <img src="./assets/multi_domain.svg" alt="Scoring-based evaluation" width="100%" />
+</div>
+
+
+### Selection-based evaluation
+Selection-Based Assessment is tailored for scenarios where preliminary candidate models are available, enabling a comparative evaluation through a binary choice mechanism. This method does not require reference answers, making it suitable for diverse and open-ended questions. However, its limitation lies in its comparative nature, as it only allows for the evaluation of two models at a time.
+
+You can use the following command to use this evaluation method.
+
+```bash
+python evaluate_by_selection.py
+```
+The results of this evaluation are shown in the following figure.
+<div align="center">
+  <img src="./assets/many_llms_sp.svg" alt="Selection-based evaluation" width="100%" />
+</div>
+
+
+### Efficiency Analysis
+We conducted an efficiency analysis of our Hyper-RAG method using GPT-4o mini on the NeurologyCrop dataset, comparing it with standard RAG, Graph RAG, and Light RAG. To ensure fairness by excluding network latency, we measured only the local retrieval time for relevant knowledge and the construction of the prior knowledge prompt. While standard RAG focuses on the direct retrieval of chunk embeddings, Graph RAG, Light RAG, and Hyper-RAG also include retrieval from node and correlation vector databases and the time for one layer of graph or hypergraph information diffusion. We averaged the response times over 50 questions from the dataset for each method. The results are shown in the following figure.
+
+<div align="center">
+  <img src="./assets/speed_all.svg" alt="Efficiency analysis" width="60%" />
+
 
 ## :memo: License
 
