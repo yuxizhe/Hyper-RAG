@@ -159,7 +159,7 @@ python evaluate_by_scoring.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
-  <img src="./assets/multi_domain.svg" alt="Scoring-based evaluation" width="100%" />
+  <img src="./assets/multi_domain.svg" alt="Scoring-based evaluation" width="90%" />
 </div>
 
 
@@ -173,7 +173,7 @@ python evaluate_by_selection.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
-  <img src="./assets/many_llms_sp.svg" alt="Selection-based evaluation" width="100%" />
+  <img src="./assets/many_llms_sp.svg" alt="Selection-based evaluation" width="90%" />
 </div>
 
 
@@ -182,7 +182,7 @@ We conducted an efficiency analysis of our Hyper-RAG method using GPT-4o mini on
 
 <div align="center">
   <img src="./assets/speed_all.svg" alt="Efficiency analysis" width="60%" />
-
+</div>
 
 ## :memo: License
 
