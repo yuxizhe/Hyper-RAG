@@ -126,13 +126,13 @@ python reproduce/Step_0.py
 2. Build the knowledge hypergraphs, and entity and relation vector database with following command.
 
 ```bash
-python reproduce/Step_2.py
+python reproduce/Step_1.py
 ```
 
 3. Extract questions from the orignial datasets with following command.
 
 ```bash
-python reproduce/Step_3_extract_question.py
+python reproduce/Step_2_extract_question.py
 ```
 
 Those questions are saved in the `cache/{{data_name}}/questions` folder. 
@@ -140,7 +140,7 @@ Those questions are saved in the `cache/{{data_name}}/questions` folder.
 4. Run the Hyper-RAG to response those questions with following command.
 
 ```bash
-python reproduce/Step_4_response_question.py
+python reproduce/Step_3_response_question.py
 ```
 
 Those response are saved in the `cache/{{data_name}}/response` folder.
@@ -161,7 +161,7 @@ python evaluate/evaluate_by_scoring.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
-  <img src="./assets/multi_domain.svg" alt="Scoring-based evaluation" width="90%" />
+  <img src="./assets/many_llms_sp.svg" alt="Scoring-based evaluation" width="90%" />
 </div>
 
 
@@ -175,7 +175,7 @@ python evaluate/evaluate_by_selection.py
 ```
 The results of this evaluation are shown in the following figure.
 <div align="center">
-  <img src="./assets/many_llms_sp.svg" alt="Selection-based evaluation" width="90%" />
+  <img src="./assets/multi_domain.svg" alt="Selection-based evaluation" width="90%" />
 </div>
 
 
