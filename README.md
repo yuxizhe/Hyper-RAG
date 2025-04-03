@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./assets/hg.jpg" alt="Hypergraph" />
+  <img src="./assets/hg.svg" alt="Hypergraph" />
 
   &#xa0;
 
@@ -85,6 +85,10 @@ $ yarn start
 
 # The server will initialize in the <http://localhost:3000>
 ```
+
+## 插入矢量图示例 ##
+
+<img src="path/to/your/vector.svg" alt="矢量图示例" width="500">
 
 ## :memo: License ##
 
