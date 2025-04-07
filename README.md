@@ -112,7 +112,7 @@ EMB_DIM = 1536
 ### Run the toy example
 
 ```bash
-python example/hyperreg_demo.py
+python examples/hyperrag_demo.py
 ```
 
 ### Or Run by Steps
