@@ -37,7 +37,7 @@
   <img src="./assets/many_llms_all.svg" alt="Overall Performance" width="100%" />
 </div>
 
-We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. **Our paper is available at <a href="https://github.com/iMoonLab/Hyper-RAG/blob/main/assets/Hyper-RAG.pdf">here</a>**.
+We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. **Our paper is available at <a href="https://www.preprints.org/manuscript/202504.0600/v1">here</a>**.
 
 ## :dart: About
 
