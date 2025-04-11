@@ -149,7 +149,7 @@ You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the H
 
 
 ### Hypergraph Visualization
-We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Light Web-UI](./web-ui/README.md).
+We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Web-UI](./web-ui/README.md).
 
 *Note: The web UI is still under development and may not be fully functional. We welcome any contributions to improve it.*
 ![vis-qa](./assets/vis-QA.png)
@@ -210,7 +210,7 @@ This repo benefits from [LightRAG](https://github.com/HKUDS/LightRAG) and [Hyper
 
 ## 🌟Citation
 ```
-@article{202504.0600,
+@article{hyper-rag,
 	title = {Hyper-RAG: Combating LLM Hallucinations Using Hypergraph-Driven Retrieval-Augmented Generation},
 	author = {Yifan Feng and Hao Hu and Xingliang Hou and Shiquan Liu and Shihui Ying and Shaoyi Du and Han Hu and Yue Gao},
 	journal = {Preprints}
