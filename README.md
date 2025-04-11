@@ -148,6 +148,15 @@ Those response are saved in the `cache/{{data_name}}/response` folder.
 You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the Hyper-RAG or Hyper-RAG-Lite.
 
 
+### Hypergraph Visualization
+We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Light Web-UI](./web-ui/README.md).
+
+*Note: The web UI is still under development and may not be fully functional. We welcome any contributions to improve it.*
+![vis-qa](./assets/vis-QA.png)
+![vis-hg](./assets/vis-hg.png)
+
+
+
 ## :checkered_flag: Evaluation
 In this work, we propose two evaluation strategys: the **selection-based** and **scoring-based** evaluation. 
 
@@ -191,12 +200,23 @@ We conducted an efficiency analysis of our Hyper-RAG method using GPT-4o mini on
 This project is under license from Apache 2.0. For more details, see the [LICENSE](LICENSE.md) file.
 
 Hyper-RAG is maintained by [iMoon-Lab](http://moon-lab.tech/), Tsinghua University. 
-Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/haoohu" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hou</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/FuYou0723" target="_blank">Yifan Zhang</a>. 
+Made with :heart: by <a href="https://github.com/yifanfeng97" target="_blank">Yifan Feng</a>, <a href="https://github.com/haoohu" target="_blank">Hao Hu</a>, <a href="https://github.com/yifanfeng97" target="_blank">Xingliang Hou</a>, <a href="https://github.com/yifanfeng97" target="_blank">Shiquan Liu</a>, <a href="https://github.com/FuYou0723" target="_blank">Yifan Zhang</a>, <a href="https://github.com/yuxizhe" target="_blank">Xizhe Yu</a>. 
 
 If you have any questions, please feel free to contact us via email: [Yifan Feng](mailto:evanfeng97@gmail.com). 
 
 This repo benefits from [LightRAG](https://github.com/HKUDS/LightRAG) and [Hypergraph-DB](https://github.com/iMoonLab/Hypergraph-DB).  Thanks for their wonderful works.
 
 &#xa0;
+
+## 🌟Citation
+```
+@article{202504.0600,
+	title = {Hyper-RAG: Combating LLM Hallucinations Using Hypergraph-Driven Retrieval-Augmented Generation},
+	author = {Yifan Feng and Hao Hu and Xingliang Hou and Shiquan Liu and Shihui Ying and Shaoyi Du and Han Hu and Yue Gao},
+	journal = {Preprints}
+	doi = {10.20944/preprints202504.0600.v2},
+	year = 2025,
+}
+```
 
 <a href="#top">Back to top</a>

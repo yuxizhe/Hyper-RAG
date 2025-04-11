@@ -269,7 +269,7 @@ const Independent = () => {
         variant="borderless"
         icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
         title="Hello, I'm Hyper-RAG"
-        description="Base on HyperGraph, AGI product interface solution, create a better intelligent vision~"
+        description="Base on Knowledge Hypergraph, AGI product interface solution, create a better intelligent vision~"
         extra={
           <Space>
             <Button icon={<ShareAltOutlined />} />
