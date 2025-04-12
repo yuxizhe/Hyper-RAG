@@ -18,6 +18,25 @@ def get_vertices():
     all_v = hg.all_v
     return all_v
 
+def getFrequentVertices():
+    """
+    获取频繁的vertices列表
+    """
+    all_v = hg.all_v
+
+    frequent_vertices = []
+
+    edges = get_hyperedges()
+    for v in all_v:
+        count = 0
+        for e in edges:
+            if v in e:
+                count += 1
+        if count >= 2:
+            frequent_vertices.append(v)
+
+    return frequent_vertices
+
 def get_vertice(vertex_id: str):
     """
     获取指定vertex的json
@@ -86,7 +105,10 @@ def get_all_detail(all_v, all_e):
 
     hyperedges = {}
     for e in all_e:
-        hyperedges['|#|'.join(e)] = hg.e(e)
+        data = hg.e(e)
+        # data的 keywords 赋值
+        data['keywords'] = data['keywords'].replace("<SEP>", ",")
+        hyperedges['|#|'.join(e)] = data
 
     return { "vertices": nodes , "edges": hyperedges }
 

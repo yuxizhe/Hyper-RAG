@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Graphin } from '@antv/graphin';
 
-import { Select } from 'antd';
+import { Select, Card, Tag } from 'antd';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
@@ -22,28 +22,48 @@ export default () => {
   const [data, setData] = useState(undefined);
   const [keys, setKeys] = useState(undefined);
   const [key, setKey] = useState(undefined);
+  const [item, setItem] = useState({
+    entity_name: '',
+    entity_type: '',
+    descriptions: [''],
+    properties: ['']
+  });
 
   useEffect(() => {
-    fetch(SERVER_URL + '/db/hyperedges')
+    fetch(SERVER_URL + '/db/vertices')
       .then((res) => res.json())
       .then((data) => {
         setKeys(data);
       }
       )
-    fetch(SERVER_URL + '/db/hyperedge_neighbor/' + '二郎神')
+    fetch(SERVER_URL + '/db/vertices_neighbor/' + '金箍棒')
       .then((res) => res.json())
       .then((data) => {
         setData(data);
+        const item = data.vertices['金箍棒'];
+        setItem({
+          entity_name: item.entity_name,
+          entity_type: item.entity_type,
+          descriptions: item.description.split('<SEP>'),
+          properties: item.additional_properties.split('<SEP>')
+        });
       }
       )
   }, []);
 
   useEffect(() => {
     if (!key) return;
-    fetch(SERVER_URL + '/db/hyperedge_neighbor/' + key)
+    fetch(SERVER_URL + '/db/vertices_neighbor/' + key)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
+        const item = data.vertices[key];
+        setItem({
+          entity_name: item.entity_name,
+          entity_type: item.entity_type,
+          descriptions: item.description.split('<SEP>'),
+          properties: item.additional_properties.split('<SEP>')
+        });
       }
       )
   }, [key]);
@@ -80,8 +100,8 @@ export default () => {
           maxRoutingIterations: 100,
           maxMarchingIterations: 20,
           pixelGroup: 4,
-          edgeR0: 50,
-          edgeR1: 100,
+          edgeR0: 10,
+          edgeR1: 60,
           nodeR0: 15,
           nodeR1: 50,
           morphBuffer: 10,
@@ -144,12 +164,13 @@ export default () => {
         ],
         autoFit: 'center',
         layout: {
-          type: 'random',
+          type: 'force',
           // enableWorker: true,
+          clustering: true,
           preventOverlap: true,
-          linkDistance: (d) => {
-            return 4;
-          },
+          // linkDistance: 700,
+          nodeClusterBy: 'entity_type',
+          gravity: 30
         },
         plugins,
       }
@@ -160,13 +181,41 @@ export default () => {
   if (!data) return <p>Loading...</p>;
 
   return <>
-    选择超边：<Select onChange={setKey} style={{ width: 300 }} defaultValue={'二郎神'} showSearch>
+    选择实体：<Select onChange={setKey} style={{ width: 300 }} defaultValue={'金箍棒'} showSearch>
       {keys.map((key) => {
         return <Select.Option key={key} value={key} >{key}</Select.Option>
       })}
     </Select>
-    <Graphin options={options} id="my-graphin-demo"
+    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+      <Graphin options={options} id="my-graphin-demo"
       className="my-graphin-container"
-      style={{ width: '100%', height: '80vh' }} />
+        style={{ width: '100%', height: '80vh' }} />
+      <Card
+        title={item.entity_name}
+        style={{ width: 400, margin: '20px' }}
+      >
+        <div>
+          <p><strong>类型:</strong> {item.entity_type}</p>
+
+          <div style={{ margin: '10px 0' }}>
+            <strong>描述:</strong>
+            {item.descriptions?.map((desc, index) => (
+              <p key={index}>{desc}</p>
+            ))}
+          </div>
+
+          <div style={{ margin: '10px 0' }}>
+            <strong>特征:</strong>
+            <div style={{ marginTop: '8px' }}>
+              {item.properties?.map((prop, index) => (
+                <Tag key={index} color="blue" style={{ margin: '4px' }}>
+                  {prop}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
   </>
 }

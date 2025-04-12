@@ -4,7 +4,8 @@ import { ProSettings } from '@ant-design/pro-components'
 const Settings: ProSettings | undefined = {
   fixSiderbar: true,
   layout: 'mix',
-  title: 'Hyper-RAG'
+  title: 'Hyper-RAG',
+  logo: '../public/logo.png'
 }
 
 export default Settings

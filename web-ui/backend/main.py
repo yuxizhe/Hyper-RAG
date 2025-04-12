@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import get_hypergraph, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server
+from db import get_hypergraph, getFrequentVertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server
 
 app = FastAPI()
 
@@ -30,7 +30,7 @@ async def get_vertices_function():
     """
     获取vertices列表
     """
-    data = get_vertices()
+    data = getFrequentVertices()
     return data
 
 @app.get("/db/hyperedges")
