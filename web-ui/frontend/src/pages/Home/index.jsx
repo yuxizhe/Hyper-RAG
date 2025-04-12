@@ -128,11 +128,11 @@ const placeholderPromptsItems = [
     children: [
       {
         key: '1-1',
-        description: `What's new in X?`
+        description: `What's new in RAG?`
       },
       {
         key: '1-2',
-        description: `What's AGI?`
+        description: `What's Hyper-RAG?`
       },
       {
         key: '1-3',
@@ -267,7 +267,7 @@ const Independent = () => {
     <Space direction="vertical" size={16} className={styles.placeholder}>
       <Welcome
         variant="borderless"
-        icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
+        icon="https://avatars.githubusercontent.com/u/45651553?s=48&v=4"
         title="Hello, I'm Hyper-RAG"
         description="Base on Knowledge Hypergraph, AGI product interface solution, create a better intelligent vision~"
         extra={
@@ -335,7 +335,7 @@ const Independent = () => {
   const logoNode = (
     <div className={styles.logo}>
       <img
-        src="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*eco6RrQhxbMAAAAAAAAAAAAADgCCAQ/original"
+        src="/public/logo.png"
         draggable={false}
         alt="logo"
       />

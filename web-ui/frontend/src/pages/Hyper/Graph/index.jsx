@@ -36,11 +36,11 @@ export default () => {
         setKeys(data);
       }
       )
-    fetch(SERVER_URL + '/db/vertices_neighbor/' + '金箍棒')
+    fetch(SERVER_URL + '/db/vertices_neighbor/' + '刘伯钦')
       .then((res) => res.json())
       .then((data) => {
         setData(data);
-        const item = data.vertices['金箍棒'];
+        const item = data.vertices['刘伯钦'];
         setItem({
           entity_name: item.entity_name,
           entity_type: item.entity_type,
@@ -170,7 +170,7 @@ export default () => {
           preventOverlap: true,
           // linkDistance: 700,
           nodeClusterBy: 'entity_type',
-          gravity: 30
+          gravity: 20
         },
         plugins,
       }
@@ -181,7 +181,7 @@ export default () => {
   if (!data) return <p>Loading...</p>;
 
   return <>
-    选择实体：<Select onChange={setKey} style={{ width: 300 }} defaultValue={'金箍棒'} showSearch>
+    选择实体：<Select onChange={setKey} style={{ width: 300 }} defaultValue={'刘伯钦'} showSearch>
       {keys.map((key) => {
         return <Select.Option key={key} value={key} >{key}</Select.Option>
       })}
