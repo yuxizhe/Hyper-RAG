@@ -5,7 +5,7 @@ const Settings: ProSettings | undefined = {
   fixSiderbar: true,
   layout: 'mix',
   title: 'Hyper-RAG',
-  logo: '../public/logo.png'
+  logo: '/logo.png'
 }
 
 export default Settings

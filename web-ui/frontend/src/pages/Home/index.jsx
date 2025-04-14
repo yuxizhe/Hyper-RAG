@@ -21,7 +21,8 @@ import {
   PlusOutlined,
   ReadOutlined,
   ShareAltOutlined,
-  SmileOutlined
+  SmileOutlined,
+  RightOutlined
 } from '@ant-design/icons'
 import { Badge, Button, Space } from 'antd'
 const renderTitle = (icon, title) => (
@@ -38,10 +39,27 @@ const defaultConversationsItems = [
 ]
 const useStyle = createStyles(({ token, css }) => {
   return {
+    topMenu: css`
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 ${token.padding}px;
+      background: ${token.colorBgContainer};
+      border-radius: ${token.borderRadius}px;
+      display: flex;
+      height: 80px;
+      margin-bottom: 10px;
+      background: ${token.colorBgContainer};
+      font-family: AlibabaPuHuiTi, ${token.fontFamily}, sans-serif;
+    `,
+    topCard: css`
+      height: 60px;
+      width: 100px;
+    `,
     layout: css`
       width: 100%;
       min-width: 1000px;
-      height: 700px;
+      height: 600px;
       border-radius: ${token.borderRadius}px;
       display: flex;
       background: ${token.colorBgContainer};
@@ -335,7 +353,7 @@ const Independent = () => {
   const logoNode = (
     <div className={styles.logo}>
       <img
-        src="/public/logo.png"
+        src="/logo.png"
         draggable={false}
         alt="logo"
       />
@@ -345,55 +363,104 @@ const Independent = () => {
 
   // ==================== Render =================
   return (
-    <div className={styles.layout}>
-      <div className={styles.menu}>
-        {/* 🌟 Logo */}
-        {logoNode}
-        {/* 🌟 添加会话 */}
-        <Button
-          onClick={onAddConversation}
-          type="link"
-          className={styles.addBtn}
-          icon={<PlusOutlined />}
-        >
-          New Conversation
-        </Button>
-        {/* 🌟 会话管理 */}
-        <Conversations
-          items={conversationsItems}
-          className={styles.conversations}
-          activeKey={activeKey}
-          onActiveChange={onConversationClick}
-        />
+    <div>
+      <div className={styles.topMenu}>
+        <div style={{ fontWeight: 700 }}>知识库选择</div>
+        <div style={{ display: 'flex', gap: 8, flex: 1, marginLeft: 20, alignItems: 'center' }}>
+          <Button
+            className={styles.topCard}
+            style={{
+              background: '#1677ff0f',
+              border: '1px solid #1677ff34'
+            }}
+          >西游记</Button>
+          <Button
+            className={styles.topCard}
+
+          >三国演义</Button>
+
+          <Button
+            className={styles.topCard}
+
+          >金融</Button>
+          <Button
+            className={styles.topCard}
+
+          >财报</Button>
+          <Button
+            className={styles.topCard}
+
+          >研报</Button>
+          <Button
+            className={styles.topCard}
+
+          >基金</Button>
+          <Button
+            className={styles.topCard}
+
+          >股票</Button>
+          <Button
+            className={styles.topCard}
+
+          >农业</Button>
+          <Button
+            className={styles.topCard}
+
+          >医学</Button>
+
+          <Button icon={<RightOutlined />} />
+        </div>
       </div>
-      <div className={styles.chat}>
-        {/* 🌟 消息列表 */}
-        <Bubble.List
-          items={
-            items.length > 0
-              ? items
-              : [
-                {
-                  content: placeholderNode,
-                  variant: 'borderless'
-                }
-              ]
-          }
-          roles={roles}
-          className={styles.messages}
-        />
-        {/* 🌟 提示词 */}
-        <Prompts items={senderPromptsItems} onItemClick={onPromptsItemClick} />
-        {/* 🌟 输入框 */}
-        <Sender
-          value={content}
-          header={senderHeader}
-          onSubmit={onSubmit}
-          onChange={setContent}
-          prefix={attachmentsNode}
-          loading={agent.isRequesting()}
-          className={styles.sender}
-        />
+      <div className={styles.layout}>
+        <div className={styles.menu}>
+          {/* 🌟 Logo */}
+          {logoNode}
+          {/* 🌟 添加会话 */}
+          <Button
+            onClick={onAddConversation}
+            type="link"
+            className={styles.addBtn}
+            icon={<PlusOutlined />}
+          >
+            New Conversation
+          </Button>
+          {/* 🌟 会话管理 */}
+          <Conversations
+            items={conversationsItems}
+            className={styles.conversations}
+            activeKey={activeKey}
+            onActiveChange={onConversationClick}
+          />
+        </div>
+        <div className={styles.chat}>
+          {/* 🌟 消息列表 */}
+          <Bubble.List
+            items={
+              items.length > 0
+                ? items
+                : [
+                  {
+                    content: placeholderNode,
+                    variant: 'borderless'
+                  }
+                ]
+            }
+            roles={roles}
+            className={styles.messages}
+          />
+          {/* 🌟 提示词 */}
+          <Prompts items={senderPromptsItems} onItemClick={onPromptsItemClick} />
+          {/* 🌟 输入框 */}
+          <Sender
+            value={content}
+            header={senderHeader}
+            onSubmit={onSubmit}
+            onChange={setContent}
+            prefix={attachmentsNode}
+            loading={agent.isRequesting()}
+            className={styles.sender}
+          />
+        </div>
       </div>
     </div>
   )
