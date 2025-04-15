@@ -37,7 +37,7 @@
   <img src="./assets/many_llms_all.svg" alt="Overall Performance" width="100%" />
 </div>
 
-We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. **Our paper is available at <a href="https://www.preprints.org/manuscript/202504.0600/v1">here</a>**.
+We show that Hyper-RAG is a powerful RAG that can enhance the performance of various LLMs and outperform other SOTA RAG methods in the NeurologyCorp dataset. **Our paper is available at <a href="https://arxiv.org/abs/2504.08758">here</a>**.
 
 ## :dart: About
 
@@ -210,12 +210,14 @@ This repo benefits from [LightRAG](https://github.com/HKUDS/LightRAG) and [Hyper
 
 ## 🌟Citation
 ```
-@article{hyper-rag,
-	title = {Hyper-RAG: Combating LLM Hallucinations Using Hypergraph-Driven Retrieval-Augmented Generation},
-	author = {Yifan Feng and Hao Hu and Xingliang Hou and Shiquan Liu and Shihui Ying and Shaoyi Du and Han Hu and Yue Gao},
-	journal = {Preprints}
-	doi = {10.20944/preprints202504.0600.v2},
-	year = 2025,
+@misc{feng2025hyperrag,
+      title={Hyper-RAG: Combating LLM Hallucinations using Hypergraph-Driven Retrieval-Augmented Generation}, 
+      author={Yifan Feng and Hao Hu and Xingliang Hou and Shiquan Liu and Shihui Ying and Shaoyi Du and Han Hu and Yue Gao},
+      year={2025},
+      eprint={2504.08758},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2504.08758}, 
 }
 ```
 
