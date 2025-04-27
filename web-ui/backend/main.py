@@ -1,3 +1,8 @@
+
+
+
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_hypergraph, getFrequentVertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server
@@ -69,3 +74,30 @@ async def get_hyperedge_neighbor(hyperedge_id: str):
     print(hyperedge_id)
     data = get_hyperedge_neighbor_server(hyperedge_id)
     return data
+
+def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs) -> str:
+    openai_client = OpenAI(api_key="your_api_key", base_url="your_api_url")
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.extend(history_messages)
+    messages.append({"role": "user", "content": prompt})
+
+    response = openai_client.chat.completions.create(
+        model="your_model", messages=messages, **kwargs
+    )
+    return response.choices[0].message.content
+
+from pydantic import BaseModel
+class Message(BaseModel):
+    message: str
+
+@app.post("/process_message")
+async def process_message(msg: Message):
+    user_message = msg.message
+    try:
+        response_message = llm_model_func(prompt=user_message)
+    except Exception as e:
+        return {"response": str(e)} 
+    return {"response": response_message}
