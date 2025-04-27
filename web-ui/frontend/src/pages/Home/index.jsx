@@ -257,11 +257,43 @@ const Independent = () => {
   }, [activeKey])
 
   // ==================== Event ====================
-  const onSubmit = nextContent => {
+  const onSubmit = async nextContent => {
     if (!nextContent) return
-    onRequest(nextContent)
+    try {
+      const response = await fetch('http://127.0.0.1:8000/process_message', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: nextContent }),
+      });
+      if (!response.ok) {
+        throw new Error('网络响应异常');
+      }
+      const data = await response.json();
+        
+        setMessages(prevMessages => [
+          ...prevMessages,
+
+          {
+              id: Date.now(), // 使用 id 代替 key
+              message: nextContent,
+              status: 'local', // 
+          },
+          {
+            id: Date.now() + 1, // 
+            message: data.response || '没有返回内容', // 
+            status: 'ai', // 
+          }
+      ]);      
+      处理后端返回的消息
+      onRequest(data.response); // 
+  } catch (error) {
+      console.error('发送消息时出错:', error);
+  }     
+    // onRequest(nextContent)
     setContent('')
-  }
+  };
   const onPromptsItemClick = info => {
     onRequest(info.data.description)
   }
