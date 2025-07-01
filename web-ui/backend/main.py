@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail
+from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail, db_manager
 import json
 import os
 
@@ -23,70 +23,88 @@ async def root():
 
 
 @app.get("/db")
-async def db():
+async def db(database: str = None):
     """
     获取全部数据json
     """
-    data = get_hypergraph()
-    return data
+    try:
+        data = get_hypergraph(database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/vertices")
-async def get_vertices_function():
+async def get_vertices_function(database: str = None):
     """
     获取vertices列表
     """
-    data = get_vertices()
-    return data
+    try:
+        data = getFrequentVertices(database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/hyperedges")
-async def get_hypergraph_function():
+async def get_hypergraph_function(database: str = None):
     """
     获取hyperedges列表
     """
-    data = get_hyperedges()
-    return data
+    try:
+        data = get_hyperedges(database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/hyperedges/{hyperedge_id}")
-async def get_hyperedge(hyperedge_id: str):
+async def get_hyperedge(hyperedge_id: str, database: str = None):
     """
     获取指定hyperedge的详情
     """
     try:
         hyperedge_id = hyperedge_id.replace("%20", " ")
         vertices = hyperedge_id.split("|*|")
-        data = get_hyperedge_detail(vertices)
+        data = get_hyperedge_detail(vertices, database)
         return data
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/db/vertices/{vertex_id}")
-async def get_vertex(vertex_id: str):
+async def get_vertex(vertex_id: str, database: str = None):
     """
     获取指定vertex的json
     """
     vertex_id = vertex_id.replace("%20", " ")
-    data = get_vertice(vertex_id)
-    return data
+    try:
+        data = get_vertice(vertex_id, database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/vertices_neighbor/{vertex_id}")
-async def get_vertex_neighbor(vertex_id: str):
+async def get_vertex_neighbor(vertex_id: str, database: str = None):
     """
     获取指定vertex的neighbor
     """
     vertex_id = vertex_id.replace("%20", " ")
-    data = get_vertice_neighbor(vertex_id)
-    return data
+    try:
+        data = get_vertice_neighbor(vertex_id, database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/hyperedge_neighbor/{hyperedge_id}")
-async def get_hyperedge_neighbor(hyperedge_id: str):
+async def get_hyperedge_neighbor(hyperedge_id: str, database: str = None):
     """
     获取指定hyperedge的neighbor
     """
     hyperedge_id = hyperedge_id.replace("%20", " ")
     hyperedge_id = hyperedge_id.replace("*", "#")
     print(hyperedge_id)
-    data = get_hyperedge_neighbor_server(hyperedge_id)
-    return data
+    try:
+        data = get_hyperedge_neighbor_server(hyperedge_id, database)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs) -> str:
     from openai import OpenAI
@@ -155,21 +173,25 @@ class VertexModel(BaseModel):
     entity_type: str = ""
     description: str = ""
     additional_properties: str = ""
+    database: str = None
 
 class HyperedgeModel(BaseModel):
     vertices: list
     keywords: str = ""
     summary: str = ""
+    database: str = None
 
 class VertexUpdateModel(BaseModel):
     entity_name: str = ""
     entity_type: str = ""
     description: str = ""
     additional_properties: str = ""
+    database: str = None
 
 class HyperedgeUpdateModel(BaseModel):
     keywords: str = ""
     summary: str = ""
+    database: str = None
 
 @app.post("/db/vertices")
 async def create_vertex(vertex: VertexModel):
@@ -182,7 +204,7 @@ async def create_vertex(vertex: VertexModel):
             "entity_type": vertex.entity_type,
             "description": vertex.description,
             "additional_properties": vertex.additional_properties
-        })
+        }, vertex.database)
         return {"success": True, "message": "Vertex created successfully", "data": result}
     except Exception as e:
         return {"success": False, "message": str(e)}
@@ -196,7 +218,7 @@ async def create_hyperedge(hyperedge: HyperedgeModel):
         result = add_hyperedge(hyperedge.vertices, {
             "keywords": hyperedge.keywords,
             "summary": hyperedge.summary
-        })
+        }, hyperedge.database)
         return {"success": True, "message": "Hyperedge created successfully", "data": result}
     except Exception as e:
         return {"success": False, "message": str(e)}
@@ -213,7 +235,7 @@ async def update_vertex_endpoint(vertex_id: str, vertex: VertexUpdateModel):
             "entity_type": vertex.entity_type,
             "description": vertex.description,
             "additional_properties": vertex.additional_properties
-        })
+        }, vertex.database)
         return {"success": True, "message": "Vertex updated successfully", "data": result}
     except Exception as e:
         return {"success": False, "message": str(e)}
@@ -229,32 +251,32 @@ async def update_hyperedge_endpoint(hyperedge_id: str, hyperedge: HyperedgeUpdat
         result = update_hyperedge(vertices, {
             "keywords": hyperedge.keywords,
             "summary": hyperedge.summary
-        })
+        }, hyperedge.database)
         return {"success": True, "message": "Hyperedge updated successfully", "data": result}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
 @app.delete("/db/vertices/{vertex_id}")
-async def delete_vertex_endpoint(vertex_id: str):
+async def delete_vertex_endpoint(vertex_id: str, database: str = None):
     """
     删除vertex
     """
     try:
         vertex_id = vertex_id.replace("%20", " ")
-        result = delete_vertex(vertex_id)
+        result = delete_vertex(vertex_id, database)
         return {"success": True, "message": "Vertex deleted successfully"}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
 @app.delete("/db/hyperedges/{hyperedge_id}")
-async def delete_hyperedge_endpoint(hyperedge_id: str):
+async def delete_hyperedge_endpoint(hyperedge_id: str, database: str = None):
     """
     删除hyperedge
     """
     try:
         hyperedge_id = hyperedge_id.replace("%20", " ")
         vertices = hyperedge_id.split("|*|")
-        result = delete_hyperedge(vertices)
+        result = delete_hyperedge(vertices, database)
         return {"success": True, "message": "Hyperedge deleted successfully"}
     except Exception as e:
         return {"success": False, "message": str(e)}
@@ -328,24 +350,23 @@ async def get_databases():
     try:
         databases = []
         
-        # 扫描backend目录下的.hgdb文件
-        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        # 使用db_manager获取数据库列表
+        database_files = db_manager.list_databases()
         
-        for file in os.listdir(backend_dir):
-            if file.endswith('.hgdb'):
-                # 根据文件名推断描述
-                description = ""
-                if 'wukong' in file:
-                    description = "西游记知识图谱"
-                elif 'Christmas' in file:
-                    description = "圣诞颂歌知识图谱"
-                else:
-                    description = f"{file.replace('.hgdb', '')}知识图谱"
-                
-                databases.append({
-                    "name": file,
-                    "description": description
-                })
+        for file in database_files:
+            # 根据文件名推断描述
+            description = ""
+            if 'wukong' in file:
+                description = "西游记知识图谱"
+            elif 'Christmas' in file:
+                description = "圣诞颂歌知识图谱"
+            else:
+                description = f"{file.replace('.hgdb', '')}知识图谱"
+            
+            databases.append({
+                "name": file,
+                "description": description
+            })
         
         # 如果没有找到数据库文件，返回默认列表
         if not databases:
@@ -399,16 +420,22 @@ async def test_database_connection(db_test: DatabaseTestModel):
     测试数据库连接
     """
     try:
-        backend_dir = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(backend_dir, db_test.database)
+        # 使用db_manager测试数据库连接
+        db = db_manager.get_database(db_test.database)
         
-        # 检查数据库文件是否存在
-        if not os.path.exists(db_path):
-            return {"success": False, "message": f"数据库文件不存在: {db_test.database}"}
+        # 尝试获取数据库的基本信息来验证连接
+        vertices_count = len(db.all_v)
+        edges_count = len(db.all_e)
         
-        # 尝试加载数据库（这里可以添加具体的数据库连接测试逻辑）
-        # 目前只检查文件存在性
-        return {"success": True, "message": "数据库连接测试成功"}
+        return {
+            "success": True, 
+            "message": "数据库连接测试成功",
+            "info": {
+                "vertices_count": vertices_count,
+                "edges_count": edges_count,
+                "database": db_test.database
+            }
+        }
         
     except Exception as e:
         return {"success": False, "message": f"数据库连接测试失败: {str(e)}"}

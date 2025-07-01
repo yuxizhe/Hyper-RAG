@@ -35,6 +35,13 @@ export const routers = [
         element: <HyperDB />
       },
       {
+        path: '/Setting',
+        name: '系统设置',
+        icon: <SettingOutlined />,
+        // permissionObj: true,
+        element: <Setting />
+      },
+      {
         path: '/Hyper/qa',
         name: '检索问答',
         icon: <QuestionCircleOutlined />,
@@ -46,13 +53,6 @@ export const routers = [
         name: '文档上传',
         icon: <FileAddOutlined />,
         element: <Files />,
-      },
-      {
-        path: '/Setting',
-        name: 'key设置',
-        icon: <SettingOutlined />,
-        // permissionObj: true,
-        element: <Setting />
       },
     ]
   },

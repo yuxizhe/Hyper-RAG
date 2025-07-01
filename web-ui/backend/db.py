@@ -1,33 +1,74 @@
 from hyperdb import HypergraphDB
+import os
 
-hg = HypergraphDB(storage_file="hypergraph_wukong.hgdb")
+class DatabaseManager:
+    """数据库管理器，支持多个数据库实例"""
+    def __init__(self):
+        self.databases = {}
+        self.default_database = "hypergraph_wukong.hgdb"
+        
+    def get_database(self, database_name=None):
+        """获取数据库实例"""
+        if database_name is None:
+            database_name = self.default_database
+            
+        # 检查数据库文件是否存在
+        if not os.path.exists(database_name):
+            raise Exception(f"Database file '{database_name}' does not exist")
+            
+        # 如果数据库实例不存在，创建新实例
+        if database_name not in self.databases:
+            self.databases[database_name] = HypergraphDB(storage_file=database_name)
+            
+        return self.databases[database_name]
+    
+    def list_databases(self):
+        """列出所有可用的数据库文件"""
+        databases = []
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        for file in os.listdir(current_dir):
+            if file.endswith('.hgdb'):
+                databases.append(file)
+                
+        return databases
+
+# 全局数据库管理器实例
+db_manager = DatabaseManager()
+
+# 为了向后兼容，保留原有的hg变量
+hg = db_manager.get_database()
 
 # 声明函数
-def get_hypergraph():
-    # 声明变量 赋值 hg.all_v
-    all_v = hg.all_v
-    # 声明变量 赋值 hg.all_e
-    all_e = hg.all_e
+def get_hypergraph(database=None):
+    # 获取指定数据库实例
+    db = db_manager.get_database(database)
+    # 声明变量 赋值 db.all_v
+    all_v = db.all_v
+    # 声明变量 赋值 db.all_e
+    all_e = db.all_e
 
-    return get_all_detail(all_v, all_e)
+    return get_all_detail(all_v, all_e, database)
 
-def get_vertices():
+def get_vertices(database=None):
     """
     获取vertices列表
     """
-    all_v = hg.all_v
+    db = db_manager.get_database(database)
+    all_v = db.all_v
     return all_v
 
-def getFrequentVertices():
+def getFrequentVertices(database=None):
     """
     获取频繁的vertices列表
     """
-    all_v = hg.all_v
+    db = db_manager.get_database(database)
+    all_v = db.all_v
 
     frequent_vertices = []
 
-    # 直接使用hg.all_e而不是调用get_hyperedges()
-    all_e = hg.all_e
+    # 直接使用db.all_e而不是调用get_hyperedges()
+    all_e = db.all_e
     for v in all_v:
         count = 0
         for e in all_e:
@@ -38,23 +79,25 @@ def getFrequentVertices():
 
     return frequent_vertices
 
-def get_vertice(vertex_id: str):
+def get_vertice(vertex_id: str, database=None):
     """
     获取指定vertex的json
     """
-    vertex = hg.v(vertex_id)
+    db = db_manager.get_database(database)
+    vertex = db.v(vertex_id)
     return vertex
 
-def get_hyperedges():
+def get_hyperedges(database=None):
     """
     获取hyperedges列表（包含详细信息）
     """
-    all_e = hg.all_e
+    db = db_manager.get_database(database)
+    all_e = db.all_e
 
     hyperedges = []
     for e in all_e:
         hyperedge_id = '|*|'.join(e)
-        hyperedge_data = hg.e(e)
+        hyperedge_data = db.e(e)
         
         # 构建返回数据
         edge_info = {
@@ -68,45 +111,48 @@ def get_hyperedges():
 
     return hyperedges
 
-def get_hyperedge(hyperedge_id: str):
+def get_hyperedge(hyperedge_id: str, database=None):
     """
     获取指定hyperedge的json
     """
-    hyperedge = hg.e(hyperedge_id)
+    db = db_manager.get_database(database)
+    hyperedge = db.e(hyperedge_id)
 
     return hyperedge
 
-def get_hyperedge_detail(vertices: list):
+def get_hyperedge_detail(vertices: list, database=None):
     """
     获取指定hyperedge的详细信息
     """
     try:
+        db = db_manager.get_database(database)
         # 转换为tuple
-        edge_tuple = hg.encode_e(tuple(vertices))
+        edge_tuple = db.encode_e(tuple(vertices))
         
         # 检查hyperedge是否存在
-        if not hg.has_e(edge_tuple):
+        if not db.has_e(edge_tuple):
             raise Exception(f"Hyperedge does not exist")
         
         # 获取hyperedge数据
-        hyperedge_data = hg.e(edge_tuple)
+        hyperedge_data = db.e(edge_tuple)
         
         return hyperedge_data
     except Exception as e:
         raise Exception(f"Failed to get hyperedge detail: {str(e)}")
 
-def get_vertice_neighbor_inner(vertex_id: str):
+def get_vertice_neighbor_inner(vertex_id: str, database=None):
     """
     获取指定vertex的neighbor
 
     todo: 查不到会报错 CLERGYMAN
     """
     try:
-        n = hg.nbr_v(vertex_id)
+        db = db_manager.get_database(database)
+        n = db.nbr_v(vertex_id)
     
         n.add(vertex_id)
 
-        e = hg.nbr_e_of_v(vertex_id)
+        e = db.nbr_e_of_v(vertex_id)
     except Exception:
         # 如果报错，返回空列表
         n = []
@@ -114,36 +160,37 @@ def get_vertice_neighbor_inner(vertex_id: str):
 
     return (n,e)
 
-def get_vertice_neighbor(vertex_id: str):
+def get_vertice_neighbor(vertex_id: str, database=None):
     """
     获取指定vertex的neighbor
 
     todo: 查不到会报错 CLERGYMAN
     """
-    n, e = get_vertice_neighbor_inner(vertex_id)
+    n, e = get_vertice_neighbor_inner(vertex_id, database)
 
-    return get_all_detail(n, e)
+    return get_all_detail(n, e, database)
 
 
-def get_all_detail(all_v, all_e):
+def get_all_detail(all_v, all_e, database=None):
     """
     获取所有详情
     """
-    # 循环遍历 all_v 每个元素 赋值为 hg.v
+    db = db_manager.get_database(database)
+    # 循环遍历 all_v 每个元素 赋值为 db.v
     nodes = {}
     for v in all_v:
-        nodes[v] = hg.v(v)
+        nodes[v] = db.v(v)
 
     hyperedges = {}
     for e in all_e:
-        data = hg.e(e)
+        data = db.e(e)
         # data的 keywords 赋值
         data['keywords'] = data['keywords'].replace("<SEP>", ",")
         hyperedges['|#|'.join(e)] = data
 
     return { "vertices": nodes , "edges": hyperedges }
 
-def get_hyperedge_neighbor_server(hyperedge_id: str):
+def get_hyperedge_neighbor_server(hyperedge_id: str, database=None):
     """
     获取指定hyperedge的neighbor
     """
@@ -152,7 +199,7 @@ def get_hyperedge_neighbor_server(hyperedge_id: str):
     vertices = set()
     hyperedges = set()
     for node in nodes:
-        n, e = get_vertice_neighbor_inner(node)
+        n, e = get_vertice_neighbor_inner(node, database)
         # 这里的 n 是一个集合
         # 这里的 e 是一个集合
         # vertexs 增加n
@@ -160,71 +207,74 @@ def get_hyperedge_neighbor_server(hyperedge_id: str):
         vertices.update(n)
         hyperedges.update(e)
 
-    return get_all_detail(vertices, hyperedges)
+    return get_all_detail(vertices, hyperedges, database)
 
-def add_vertex(vertex_id: str, vertex_data: dict):
+def add_vertex(vertex_id: str, vertex_data: dict, database=None):
     """
     添加新的vertex
     """
     try:
+        db = db_manager.get_database(database)
         # 如果vertex已存在，抛出异常
-        if hg.has_v(vertex_id):
+        if db.has_v(vertex_id):
             raise Exception(f"Vertex '{vertex_id}' already exists")
         
         # 添加vertex
-        hg.add_v(vertex_id, vertex_data)
+        db.add_v(vertex_id, vertex_data)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
-        return hg.v(vertex_id)
+        return db.v(vertex_id)
     except Exception as e:
         raise Exception(f"Failed to add vertex: {str(e)}")
 
-def add_hyperedge(vertices: list, hyperedge_data: dict):
+def add_hyperedge(vertices: list, hyperedge_data: dict, database=None):
     """
     添加新的hyperedge
     """
     try:
+        db = db_manager.get_database(database)
         # 检查所有vertices是否存在
         for vertex in vertices:
-            if not hg.has_v(vertex):
+            if not db.has_v(vertex):
                 raise Exception(f"Vertex '{vertex}' does not exist")
         
         # 转换为tuple
-        edge_tuple = hg.encode_e(tuple(vertices))
+        edge_tuple = db.encode_e(tuple(vertices))
         
         # 如果hyperedge已存在，抛出异常
-        if hg.has_e(edge_tuple):
+        if db.has_e(edge_tuple):
             raise Exception(f"Hyperedge already exists")
         
         # 添加hyperedge
-        hg.add_e(edge_tuple, hyperedge_data)
+        db.add_e(edge_tuple, hyperedge_data)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
-        return hg.e(edge_tuple)
+        return db.e(edge_tuple)
     except Exception as e:
         raise Exception(f"Failed to add hyperedge: {str(e)}")
 
-def update_vertex(vertex_id: str, vertex_data: dict):
+def update_vertex(vertex_id: str, vertex_data: dict, database=None):
     """
     更新vertex信息
     """
     try:
+        db = db_manager.get_database(database)
         # 检查vertex是否存在
-        if not hg.has_v(vertex_id):
+        if not db.has_v(vertex_id):
             raise Exception(f"Vertex '{vertex_id}' does not exist")
         
         # 获取现有数据
-        existing_data = hg.v(vertex_id)
+        existing_data = db.v(vertex_id)
         
         # 更新数据（只更新非空字段）
         for key, value in vertex_data.items():
@@ -232,33 +282,34 @@ def update_vertex(vertex_id: str, vertex_data: dict):
                 existing_data[key] = value
         
         # 移除旧的vertex并添加新的
-        hg.remove_v(vertex_id)
-        hg.add_v(vertex_id, existing_data)
+        db.remove_v(vertex_id)
+        db.add_v(vertex_id, existing_data)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
-        return hg.v(vertex_id)
+        return db.v(vertex_id)
     except Exception as e:
         raise Exception(f"Failed to update vertex: {str(e)}")
 
-def update_hyperedge(vertices: list, hyperedge_data: dict):
+def update_hyperedge(vertices: list, hyperedge_data: dict, database=None):
     """
     更新hyperedge信息
     """
     try:
+        db = db_manager.get_database(database)
         # 转换为tuple
-        edge_tuple = hg.encode_e(tuple(vertices))
+        edge_tuple = db.encode_e(tuple(vertices))
         
         # 检查hyperedge是否存在
-        if not hg.has_e(edge_tuple):
+        if not db.has_e(edge_tuple):
             raise Exception(f"Hyperedge does not exist")
         
         # 获取现有数据
-        existing_data = hg.e(edge_tuple)
+        existing_data = db.e(edge_tuple)
         
         # 更新数据（只更新非空字段）
         for key, value in hyperedge_data.items():
@@ -266,61 +317,63 @@ def update_hyperedge(vertices: list, hyperedge_data: dict):
                 existing_data[key] = value
         
         # 移除旧的hyperedge并添加新的
-        hg.remove_e(edge_tuple)
-        hg.add_e(edge_tuple, existing_data)
+        db.remove_e(edge_tuple)
+        db.add_e(edge_tuple, existing_data)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
-        return hg.e(edge_tuple)
+        return db.e(edge_tuple)
     except Exception as e:
         raise Exception(f"Failed to update hyperedge: {str(e)}")
 
-def delete_vertex(vertex_id: str):
+def delete_vertex(vertex_id: str, database=None):
     """
     删除vertex
     """
     try:
+        db = db_manager.get_database(database)
         # 检查vertex是否存在
-        if not hg.has_v(vertex_id):
+        if not db.has_v(vertex_id):
             raise Exception(f"Vertex '{vertex_id}' does not exist")
         
         # 删除vertex
-        hg.remove_v(vertex_id)
+        db.remove_v(vertex_id)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
         return True
     except Exception as e:
         raise Exception(f"Failed to delete vertex: {str(e)}")
 
-def delete_hyperedge(vertices: list):
+def delete_hyperedge(vertices: list, database=None):
     """
     删除hyperedge
     """
     try:
+        db = db_manager.get_database(database)
         # 转换为tuple
-        edge_tuple = hg.encode_e(tuple(vertices))
+        edge_tuple = db.encode_e(tuple(vertices))
         
         # 检查hyperedge是否存在
-        if not hg.has_e(edge_tuple):
+        if not db.has_e(edge_tuple):
             raise Exception(f"Hyperedge does not exist")
         
         # 删除hyperedge
-        hg.remove_e(edge_tuple)
+        db.remove_e(edge_tuple)
         
         # 保存到文件
-        hg.save(hg.storage_file)
+        db.save(db.storage_file)
         
         # 清除缓存
-        hg._clear_cache()
+        db._clear_cache()
         
         return True
     except Exception as e:

@@ -14,14 +14,25 @@ import {
     Descriptions,
     Card,
     Spin,
-    Tooltip
+    Tooltip,
+    Typography,
+    Alert,
+    Row,
+    Col,
+    Statistic
 } from 'antd';
 import {
     PlusOutlined,
     EditOutlined,
     DeleteOutlined,
-    EyeOutlined
+    EyeOutlined,
+    DatabaseOutlined
 } from '@ant-design/icons';
+import { observer } from 'mobx-react';
+import { storeGlobalUser } from '../../../store/globalUser';
+import DatabaseSelector from '../../../components/DatabaseSelector';
+
+const { Text } = Typography;
 import HyperGraph from '../../../components/HyperGraph';
 
 const { TextArea } = Input;
@@ -40,19 +51,36 @@ const HyperDB = () => {
     const [modalDataType, setModalDataType] = useState('vertex'); // vertex, hyperedge
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [form] = Form.useForm();
+    const [isVertexModalVisible, setIsVertexModalVisible] = useState(false);
+    const [isHyperedgeModalVisible, setIsHyperedgeModalVisible] = useState(false);
+    const [editingVertex, setEditingVertex] = useState(null);
+    const [editingHyperedge, setEditingHyperedge] = useState(null);
+    const [vertexForm] = Form.useForm();
+    const [hyperedgeForm] = Form.useForm();
+
+    // 初始化数据库
+    useEffect(() => {
+        storeGlobalUser.restoreSelectedDatabase();
+        storeGlobalUser.loadDatabases();
+    }, []);
 
     // 获取数据
-    const fetchData = async () => {
+    const fetchData = async (database = storeGlobalUser.selectedDatabase) => {
+        if (!database) return;
+
         setLoading(true);
-        console.log('Fetching data from:', SERVER_URL);
+        console.log('Fetching data from:', SERVER_URL, 'Database:', database);
         try {
+            const verticesUrl = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(database)}`;
+            const hyperedgesUrl = `${SERVER_URL}/db/hyperedges?database=${encodeURIComponent(database)}`;
+
             console.log('Making requests to:');
-            console.log('- Vertices:', `${SERVER_URL}/db/vertices`);
-            console.log('- Hyperedges:', `${SERVER_URL}/db/hyperedges`);
+            console.log('- Vertices:', verticesUrl);
+            console.log('- Hyperedges:', hyperedgesUrl);
 
             const [verticesRes, hyperedgesRes] = await Promise.all([
-                fetch(`${SERVER_URL}/db/vertices`),
-                fetch(`${SERVER_URL}/db/hyperedges`)
+                fetch(verticesUrl),
+                fetch(hyperedgesUrl)
             ]);
 
             console.log('Response status:');
@@ -82,14 +110,18 @@ const HyperDB = () => {
         setLoading(false);
     };
 
+    // 当数据库选择改变时，重新获取数据
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (storeGlobalUser.selectedDatabase) {
+            fetchData(storeGlobalUser.selectedDatabase);
+        }
+    }, [storeGlobalUser.selectedDatabase]);
 
     // 获取vertex详细信息
     const getVertexDetail = async (vertexId) => {
         try {
-            const response = await fetch(`${SERVER_URL}/db/vertices/${encodeURIComponent(vertexId)}`);
+            const url = `${SERVER_URL}/db/vertices/${encodeURIComponent(vertexId)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+            const response = await fetch(url);
             const data = await response.json();
             return data;
         } catch (error) {
@@ -101,7 +133,8 @@ const HyperDB = () => {
     // 获取hyperedge详细信息
     const getHyperedgeDetail = async (hyperedgeId) => {
         try {
-            const response = await fetch(`${SERVER_URL}/db/hyperedges/${encodeURIComponent(hyperedgeId)}`);
+            const url = `${SERVER_URL}/db/hyperedges/${encodeURIComponent(hyperedgeId)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+            const response = await fetch(url);
             const data = await response.json();
             return data;
         } catch (error) {
@@ -116,21 +149,27 @@ const HyperDB = () => {
             setLoading(true);
             let response;
 
+            const submitData = {
+                ...values,
+                database: storeGlobalUser.selectedDatabase
+            };
+
             if (modalType === 'add') {
                 response = await fetch(`${SERVER_URL}/db/vertices`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(values),
+                    body: JSON.stringify(submitData),
                 });
             } else {
-                response = await fetch(`${SERVER_URL}/db/vertices/${encodeURIComponent(selectedRecord)}`, {
+                const url = `${SERVER_URL}/db/vertices/${encodeURIComponent(selectedRecord)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+                response = await fetch(url, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(values),
+                    body: JSON.stringify(submitData),
                 });
             }
 
@@ -159,7 +198,8 @@ const HyperDB = () => {
             const verticesArray = values.vertices.split(',').map(v => v.trim()).filter(v => v);
             const submitData = {
                 ...values,
-                vertices: verticesArray
+                vertices: verticesArray,
+                database: storeGlobalUser.selectedDatabase
             };
 
             let response;
@@ -205,7 +245,8 @@ const HyperDB = () => {
     const handleDeleteVertex = async (vertexId) => {
         try {
             setLoading(true);
-            const response = await fetch(`${SERVER_URL}/db/vertices/${encodeURIComponent(vertexId)}`, {
+            const url = `${SERVER_URL}/db/vertices/${encodeURIComponent(vertexId)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+            const response = await fetch(url, {
                 method: 'DELETE',
             });
 
@@ -227,7 +268,8 @@ const HyperDB = () => {
     const handleDeleteHyperedge = async (hyperedgeId) => {
         try {
             setLoading(true);
-            const response = await fetch(`${SERVER_URL}/db/hyperedges/${encodeURIComponent(hyperedgeId)}`, {
+            const url = `${SERVER_URL}/db/hyperedges/${encodeURIComponent(hyperedgeId)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+            const response = await fetch(url, {
                 method: 'DELETE',
             });
 
@@ -454,54 +496,89 @@ const HyperDB = () => {
         summary: hyperedge.summary || ''
     }));
 
+    // 数据库切换处理
+    const onDatabaseChange = () => {
+        fetchData(storeGlobalUser.selectedDatabase);
+    };
+
     return (
-        <div style={{}}>
-            <Card title="HyperGraph 数据库管理" style={{ marginBottom: '20px' }}>
-                <Descriptions column={2}>
-                    <Descriptions.Item label="Vertices 总数">{vertices.length}</Descriptions.Item>
-                    <Descriptions.Item label="Hyperedges 总数">{hyperedges.length}</Descriptions.Item>
-                </Descriptions>
+        <div>
+            {/* 顶部数据库选择器 */}
+            <Card style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <h3 style={{ margin: 0 }}>数据库管理</h3>
+                        <DatabaseSelector
+                            mode="select"
+                            // showRefresh={true}
+                            size="middle"
+                            onChange={onDatabaseChange}
+                        />
+                    </div>
+                </div>
+
+                {storeGlobalUser.selectedDatabase && (
+                    <Row gutter={16} style={{ marginTop: 16 }}>
+                        <Col span={6}>
+                            <Statistic title="实体数量" value={vertices.length} prefix={<DatabaseOutlined />} />
+                        </Col>
+                        <Col span={6}>
+                            <Statistic title="超边数量" value={hyperedges.length} prefix={<DatabaseOutlined />} />
+                        </Col>
+                    </Row>
+                )}
             </Card>
 
-            <Tabs defaultActiveKey="vertices">
-                <TabPane tab="Vertices 管理" key="vertices">
-                    <div style={{ marginBottom: '16px' }}>
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => openModal('add', 'vertex')}
-                        >
-                            添加 Vertex
-                        </Button>
-                    </div>
-                    <Table
-                        columns={vertexColumns}
-                        dataSource={verticesTableData}
-                        loading={loading}
-                        pagination={{ pageSize: 10 }}
-                        scroll={{ x: 600 }}
-                    />
-                </TabPane>
+            {/* 数据表格区域 */}
+            {storeGlobalUser.selectedDatabase ? (
+                <>
+                    {/* Vertices表格 */}
+                    <Card title="实体 (Vertices)" style={{ marginBottom: 24 }}>
+                        <div style={{ marginBottom: '16px' }}>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => openModal('add', 'vertex')}
+                            >
+                                添加 Vertex
+                            </Button>
+                        </div>
+                        <Table
+                            columns={vertexColumns}
+                            dataSource={verticesTableData}
+                            loading={loading}
+                            pagination={{ pageSize: 10 }}
+                            scroll={{ x: 600 }}
+                        />
+                    </Card>
 
-                <TabPane tab="Hyperedges 管理" key="hyperedges">
-                    <div style={{ marginBottom: '16px' }}>
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => openModal('add', 'hyperedge')}
-                        >
-                            添加 Hyperedge
-                        </Button>
-                    </div>
-                    <Table
-                        columns={hyperedgeColumns}
-                        dataSource={hyperedgesTableData}
-                        loading={loading}
-                        pagination={{ pageSize: 10 }}
-                        scroll={{ x: 600 }}
-                    />
-                </TabPane>
-            </Tabs>
+                    {/* Hyperedges表格 */}
+                    <Card title="超边 (Hyperedges)">
+                        <div style={{ marginBottom: '16px' }}>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => openModal('add', 'hyperedge')}
+                            >
+                                添加 Hyperedge
+                            </Button>
+                        </div>
+                        <Table
+                            columns={hyperedgeColumns}
+                            dataSource={hyperedgesTableData}
+                            loading={loading}
+                            pagination={{ pageSize: 10 }}
+                            scroll={{ x: 600 }}
+                        />
+                    </Card>
+                </>
+            ) : (
+                <Card style={{ textAlign: 'center', padding: '60px 0' }}>
+                    <DatabaseOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: 16 }} />
+                    <h3>请选择一个数据库</h3>
+                    <p style={{ color: '#999' }}>选择数据库后即可查看和管理数据</p>
+                </Card>
+            )}
 
             {/* Modal for Add/Edit/View */}
             <Modal
@@ -685,4 +762,4 @@ const HyperDB = () => {
     );
 };
 
-export default HyperDB;
+export default observer(HyperDB);

@@ -19,6 +19,7 @@ const colors = [
 
 const HyperGraph = ({
     vertexId,
+    database,
     height = '400px',
     width = '100%',
     showTooltip = true,
@@ -29,12 +30,16 @@ const HyperGraph = ({
     const [loading, setLoading] = useState(false);
 
     // 获取vertex邻居数据
-    const fetchVertexNeighbor = async (vId) => {
+    const fetchVertexNeighbor = async (vId, db) => {
         if (!vId) return;
 
         setLoading(true);
         try {
-            const response = await fetch(`${SERVER_URL}/db/vertices_neighbor/${encodeURIComponent(vId)}`);
+            const url = db
+                ? `${SERVER_URL}/db/vertices_neighbor/${encodeURIComponent(vId)}?database=${encodeURIComponent(db)}`
+                : `${SERVER_URL}/db/vertices_neighbor/${encodeURIComponent(vId)}`;
+
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`API failed: ${response.status}`);
             }
@@ -49,9 +54,9 @@ const HyperGraph = ({
 
     useEffect(() => {
         if (vertexId) {
-            fetchVertexNeighbor(vertexId);
+            fetchVertexNeighbor(vertexId, database);
         }
-    }, [vertexId]);
+    }, [vertexId, database]);
 
     const options = useMemo(() => {
         let hyperData = {

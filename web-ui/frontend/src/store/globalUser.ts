@@ -2,6 +2,9 @@ import { makeAutoObservable } from 'mobx'
 
 class GlobalUser {
   userInfo: Partial<User.UserEntity> = {}
+  selectedDatabase: string = ''
+  availableDatabases: Array<{ name: string; description: string }> = []
+
   constructor() {
     makeAutoObservable(this)
   }
@@ -28,6 +31,46 @@ class GlobalUser {
 
   setUserInfo(user: Partial<User.UserEntity>) {
     this.userInfo = user
+  }
+
+  // 设置当前选中的数据库
+  setSelectedDatabase(database: string) {
+    this.selectedDatabase = database
+    // 保存到localStorage
+    localStorage.setItem('selectedDatabase', database)
+  }
+
+  // 设置可用数据库列表
+  setAvailableDatabases(databases: Array<{ name: string; description: string }>) {
+    this.availableDatabases = databases
+    // 如果还没有选中数据库且有可用数据库，选择第一个
+    if (!this.selectedDatabase && databases.length > 0) {
+      this.setSelectedDatabase(databases[0].name)
+    }
+  }
+
+  // 从localStorage恢复选中的数据库
+  restoreSelectedDatabase() {
+    const saved = localStorage.getItem('selectedDatabase')
+    if (saved) {
+      this.selectedDatabase = saved
+    }
+  }
+
+  // 获取数据库列表
+  async loadDatabases() {
+    try {
+      const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000'
+      const response = await fetch(`${SERVER_URL}/databases`)
+      if (response.ok) {
+        const databases = await response.json()
+        this.setAvailableDatabases(databases)
+        return databases
+      }
+    } catch (error) {
+      console.error('加载数据库列表失败:', error)
+    }
+    return []
   }
 }
 
