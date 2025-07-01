@@ -455,7 +455,7 @@ const HyperDB = () => {
     }));
 
     return (
-        <div style={{ padding: '20px' }}>
+        <div style={{}}>
             <Card title="HyperGraph 数据库管理" style={{ marginBottom: '20px' }}>
                 <Descriptions column={2}>
                     <Descriptions.Item label="Vertices 总数">{vertices.length}</Descriptions.Item>

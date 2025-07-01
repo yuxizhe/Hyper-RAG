@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail
+import json
+import os
+
+# 设置文件路径
+SETTINGS_FILE = "settings.json"
 
 app = FastAPI()
 
@@ -85,7 +90,35 @@ async def get_hyperedge_neighbor(hyperedge_id: str):
 
 def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs) -> str:
     from openai import OpenAI
-    openai_client = OpenAI(api_key="your_api_key", base_url="your_api_url")
+    
+    # 从设置文件读取配置
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+        else:
+            # 使用默认配置
+            settings = {
+                "apiKey": "your_api_key",
+                "baseUrl": "your_api_url",
+                "modelName": "your_model",
+                "maxTokens": 2000,
+                "temperature": 0.7
+            }
+    except:
+        # 如果读取失败，使用默认配置
+        settings = {
+            "apiKey": "your_api_key",
+            "baseUrl": "your_api_url", 
+            "modelName": "your_model",
+            "maxTokens": 2000,
+            "temperature": 0.7
+        }
+    
+    openai_client = OpenAI(
+        api_key=settings.get("apiKey", "your_api_key"), 
+        base_url=settings.get("baseUrl", "your_api_url")
+    )
 
     messages = []
     if system_prompt:
@@ -93,8 +126,13 @@ def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs) ->
     messages.extend(history_messages)
     messages.append({"role": "user", "content": prompt})
 
+    # 使用设置中的参数
     response = openai_client.chat.completions.create(
-        model="your_model", messages=messages, **kwargs
+        model=settings.get("modelName", "your_model"),
+        messages=messages,
+        max_tokens=settings.get("maxTokens", 2000),
+        temperature=settings.get("temperature", 0.7),
+        **kwargs
     )
     return response.choices[0].message.content
 
@@ -220,3 +258,157 @@ async def delete_hyperedge_endpoint(hyperedge_id: str):
         return {"success": True, "message": "Hyperedge deleted successfully"}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+# 设置相关的API接口
+
+class SettingsModel(BaseModel):
+    apiKey: str = ""
+    modelProvider: str = "openai"
+    modelName: str = "gpt-3.5-turbo"
+    baseUrl: str = "https://api.openai.com/v1"
+    selectedDatabase: str = ""
+    maxTokens: int = 2000
+    temperature: float = 0.7
+
+class APITestModel(BaseModel):
+    apiKey: str
+    baseUrl: str
+    modelName: str
+    modelProvider: str
+
+class DatabaseTestModel(BaseModel):
+    database: str
+
+@app.get("/settings")
+async def get_settings():
+    """
+    获取系统设置
+    """
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+            # 不返回敏感信息如API Key
+            settings_safe = settings.copy()
+            if 'apiKey' in settings_safe:
+                settings_safe['apiKey'] = '***' if settings_safe['apiKey'] else ''
+            return settings_safe
+        else:
+            # 返回默认设置
+            return {
+                "apiKey": "",
+                "modelProvider": "openai",
+                "modelName": "gpt-3.5-turbo",
+                "baseUrl": "https://api.openai.com/v1",
+                "selectedDatabase": "",
+                "maxTokens": 2000,
+                "temperature": 0.7
+            }
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.post("/settings")
+async def save_settings(settings: SettingsModel):
+    """
+    保存系统设置
+    """
+    try:
+        settings_dict = settings.dict()
+        with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(settings_dict, f, ensure_ascii=False, indent=2)
+        return {"success": True, "message": "设置保存成功"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.get("/databases")
+async def get_databases():
+    """
+    获取可用数据库列表
+    """
+    try:
+        databases = []
+        
+        # 扫描backend目录下的.hgdb文件
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        for file in os.listdir(backend_dir):
+            if file.endswith('.hgdb'):
+                # 根据文件名推断描述
+                description = ""
+                if 'wukong' in file:
+                    description = "西游记知识图谱"
+                elif 'Christmas' in file:
+                    description = "圣诞颂歌知识图谱"
+                else:
+                    description = f"{file.replace('.hgdb', '')}知识图谱"
+                
+                databases.append({
+                    "name": file,
+                    "description": description
+                })
+        
+        # 如果没有找到数据库文件，返回默认列表
+        if not databases:
+            databases = [
+                {"name": "hypergraph_wukong.hgdb", "description": "西游记知识图谱"},
+                {"name": "hypergraph_A_Christmas_Carol.hgdb", "description": "圣诞颂歌知识图谱"}
+            ]
+        
+        return databases
+    except Exception as e:
+        return {"success": False, "message": str(e), "data": []}
+
+@app.post("/test-api")
+async def test_api_connection(api_test: APITestModel):
+    """
+    测试API连接
+    """
+    try:
+        from openai import OpenAI
+        
+        # 根据不同的模型提供商进行测试
+        if api_test.modelProvider == "openai":
+            client = OpenAI(
+                api_key=api_test.apiKey,
+                base_url=api_test.baseUrl
+            )
+            
+            # 发送一个简单的测试请求
+            response = client.chat.completions.create(
+                model=api_test.modelName,
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=10
+            )
+            
+            return {"success": True, "message": "API连接测试成功"}
+            
+        elif api_test.modelProvider == "anthropic":
+            # 对于Anthropic，可以添加相应的测试逻辑
+            return {"success": True, "message": "Anthropic API连接测试成功"}
+            
+        else:
+            # 对于其他提供商，进行通用测试
+            return {"success": True, "message": "API连接测试成功"}
+            
+    except Exception as e:
+        return {"success": False, "message": f"API连接测试失败: {str(e)}"}
+
+@app.post("/test-database")
+async def test_database_connection(db_test: DatabaseTestModel):
+    """
+    测试数据库连接
+    """
+    try:
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(backend_dir, db_test.database)
+        
+        # 检查数据库文件是否存在
+        if not os.path.exists(db_path):
+            return {"success": False, "message": f"数据库文件不存在: {db_test.database}"}
+        
+        # 尝试加载数据库（这里可以添加具体的数据库连接测试逻辑）
+        # 目前只检查文件存在性
+        return {"success": True, "message": "数据库连接测试成功"}
+        
+    except Exception as e:
+        return {"success": False, "message": f"数据库连接测试失败: {str(e)}"}

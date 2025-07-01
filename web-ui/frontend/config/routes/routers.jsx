@@ -5,6 +5,7 @@ import Home from '@/pages/Home'
 import Files from '@/pages/Hyper/Files'
 import Graph from '@/pages/Hyper/Graph'
 import HyperDB from '@/pages/Hyper/DB'
+import Setting from '@/pages/Setting'
 import { HomeFilled, SmileFilled, FileAddOutlined, QuestionCircleOutlined, DeploymentUnitOutlined, DatabaseOutlined, SettingOutlined } from '@ant-design/icons'
 import { Navigate } from 'react-router-dom'
 
@@ -27,6 +28,13 @@ export const routers = [
         element: <Graph />
       },
       {
+        path: '/Hyper/DB',
+        name: 'HypergraphDB',
+        icon: <DatabaseOutlined />,
+        // permissionObj: true,
+        element: <HyperDB />
+      },
+      {
         path: '/Hyper/qa',
         name: '检索问答',
         icon: <QuestionCircleOutlined />,
@@ -40,18 +48,11 @@ export const routers = [
         element: <Files />,
       },
       {
-        path: '/Hyper/DB',
-        name: 'HypergraphDB',
-        icon: <DatabaseOutlined />,
-        // permissionObj: true,
-        element: <HyperDB />
-      },
-      {
         path: '/Setting',
         name: 'key设置',
         icon: <SettingOutlined />,
         // permissionObj: true,
-        element: <Home />
+        element: <Setting />
       },
     ]
   },
