@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Graphin } from '@antv/graphin';
-
 import { Select, Card, Tag } from 'antd';
+import HyperGraph from '../../../components/HyperGraph';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 

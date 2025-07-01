@@ -22,6 +22,7 @@ import {
     DeleteOutlined,
     EyeOutlined
 } from '@ant-design/icons';
+import HyperGraph from '../../../components/HyperGraph';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -540,48 +541,98 @@ const HyperDB = () => {
                         {modalType === 'add' ? '添加' : '更新'}
                     </Button>
                 ]}
-                width={600}
+                width={modalType === 'view' && modalDataType === 'vertex' ? 1200 : 600}
             >
                 <Spin spinning={modalLoading} tip="加载数据中...">
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        onFinish={modalDataType === 'vertex' ? handleVertexSubmit : handleHyperedgeSubmit}
-                    >
-                        {modalDataType === 'vertex' ? (
-                            <>
-                                <Form.Item
-                                    name="vertex_id"
-                                    label="Vertex ID"
-                                    rules={[{ required: modalType === 'add', message: '请输入Vertex ID' }]}
-                                >
-                                    <Input
-                                        placeholder="输入唯一的Vertex ID"
-                                        disabled={modalType !== 'add'}
-                                    />
-                                </Form.Item>
-                                <Form.Item name="entity_name" label="实体名称">
-                                    <Input placeholder="输入实体名称" disabled={modalType === 'view'} />
-                                </Form.Item>
-                                <Form.Item name="entity_type" label="实体类型">
-                                    <Input placeholder="输入实体类型" disabled={modalType === 'view'} />
-                                </Form.Item>
-                                <Form.Item name="description" label="描述">
-                                    <TextArea
-                                        rows={3}
-                                        placeholder="输入描述信息，多个描述用<SEP>分隔"
-                                        disabled={modalType === 'view'}
-                                    />
-                                </Form.Item>
-                                <Form.Item name="additional_properties" label="附加属性">
-                                    <TextArea
-                                        rows={3}
-                                        placeholder="输入附加属性，多个属性用<SEP>分隔"
-                                        disabled={modalType === 'view'}
-                                    />
-                                </Form.Item>
-                            </>
-                        ) : (
+                    {modalType === 'view' && modalDataType === 'vertex' ? (
+                        // 查看Vertex时并列显示详细信息和超图
+                        <div style={{ display: 'flex', gap: '20px', height: '500px' }}>
+                            {/* 左侧：详细信息 */}
+                            <div style={{ flex: '0 0 400px', overflowY: 'auto' }}>
+                                <Card title="详细信息" size="small" style={{ height: '100%' }}>
+                                    <Form
+                                        form={form}
+                                        layout="vertical"
+                                        size="small"
+                                    >
+                                        <Form.Item
+                                            name="vertex_id"
+                                            label="Vertex ID"
+                                        >
+                                            <Input disabled />
+                                        </Form.Item>
+                                        <Form.Item name="entity_name" label="实体名称">
+                                            <Input disabled />
+                                        </Form.Item>
+                                        <Form.Item name="entity_type" label="实体类型">
+                                            <Input disabled />
+                                        </Form.Item>
+                                        <Form.Item name="description" label="描述">
+                                            <TextArea rows={4} disabled />
+                                        </Form.Item>
+                                        <Form.Item name="additional_properties" label="附加属性">
+                                            <TextArea rows={4} disabled />
+                                        </Form.Item>
+                                    </Form>
+                                </Card>
+                            </div>
+
+                            {/* 右侧：关系图谱 */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <Card title="关系图谱" size="small" style={{ height: '100%' }}>
+                                    <div style={{ height: 'calc(100% - 40px)' }}>
+                                        <HyperGraph
+                                            vertexId={selectedRecord}
+                                            height="100%"
+                                            width="100%"
+                                            showTooltip={true}
+                                            graphId={`vertex-graph-${selectedRecord}`}
+                                        />
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
+                    ) : (
+                    // 其他情况（添加/编辑）显示正常表单
+                            <Form
+                                form={form}
+                                layout="vertical"
+                                onFinish={modalDataType === 'vertex' ? handleVertexSubmit : handleHyperedgeSubmit}
+                            >
+                                {modalDataType === 'vertex' ? (
+                                    <>
+                                        <Form.Item
+                                            name="vertex_id"
+                                            label="Vertex ID"
+                                            rules={[{ required: modalType === 'add', message: '请输入Vertex ID' }]}
+                                        >
+                                            <Input
+                                                placeholder="输入唯一的Vertex ID"
+                                                disabled={modalType !== 'add'}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item name="entity_name" label="实体名称">
+                                            <Input placeholder="输入实体名称" disabled={modalType === 'view'} />
+                                        </Form.Item>
+                                        <Form.Item name="entity_type" label="实体类型">
+                                            <Input placeholder="输入实体类型" disabled={modalType === 'view'} />
+                                        </Form.Item>
+                                        <Form.Item name="description" label="描述">
+                                            <TextArea
+                                                rows={3}
+                                                placeholder="输入描述信息，多个描述用<SEP>分隔"
+                                                disabled={modalType === 'view'}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item name="additional_properties" label="附加属性">
+                                            <TextArea
+                                                rows={3}
+                                                placeholder="输入附加属性，多个属性用<SEP>分隔"
+                                                disabled={modalType === 'view'}
+                                            />
+                                        </Form.Item>
+                                    </>
+                                ) : (
                             <>
                                 {modalType === 'view' && (
                                     <Card
@@ -625,8 +676,9 @@ const HyperDB = () => {
                                     />
                                 </Form.Item>
                             </>
-                        )}
-                    </Form>
+                                )}
+                            </Form>
+                    )}
                 </Spin>
             </Modal>
         </div>
