@@ -1,27 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Graphin } from '@antv/graphin';
-
-import { Select, Card, Tag } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Select, Card, Tag, Spin } from 'antd';
+import { observer } from 'mobx-react';
+import { storeGlobalUser } from '../../../store/globalUser';
+import HyperGraph from '../../../components/HyperGraph';
+import DatabaseSelector from '../../../components/DatabaseSelector';
+import { DatabaseOutlined } from '@ant-design/icons';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-const colors = [
-  '#F6BD16',
-  '#00C9C9',
-  '#F08F56',
-  '#D580FF',
-  '#FF3D00',
-  '#16f69c',
-  '#004ac9',
-  '#f056d1',
-  '#a680ff',
-  '#c8ff00',
-]
-
-export default () => {
-  const [data, setData] = useState(undefined);
+const GraphPage = () => {
   const [keys, setKeys] = useState(undefined);
   const [key, setKey] = useState(undefined);
+  const [loading, setLoading] = useState(false);
   const [item, setItem] = useState({
     entity_name: '',
     entity_type: '',
@@ -29,193 +19,195 @@ export default () => {
     properties: ['']
   });
 
+  // 初始化数据库
   useEffect(() => {
-    fetch(SERVER_URL + '/db/vertices')
+    storeGlobalUser.restoreSelectedDatabase();
+    storeGlobalUser.loadDatabases();
+  }, []);
+
+  // 获取vertices列表
+  useEffect(() => {
+    if (!storeGlobalUser.selectedDatabase) return;
+
+    setLoading(true);
+    const url = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         setKeys(data);
-      }
-      )
-    fetch(SERVER_URL + '/db/vertices_neighbor/' + '刘伯钦')
-      .then((res) => res.json())
-      .then((data) => {
-        setData(data);
-        const item = data.vertices['刘伯钦'];
-        setItem({
-          entity_name: item.entity_name,
-          entity_type: item.entity_type,
-          descriptions: item.description.split('<SEP>'),
-          properties: item.additional_properties.split('<SEP>')
-        });
-      }
-      )
-  }, []);
-
-  useEffect(() => {
-    if (!key) return;
-    fetch(SERVER_URL + '/db/vertices_neighbor/' + key)
-      .then((res) => res.json())
-      .then((data) => {
-        setData(data);
-        const item = data.vertices[key];
-        setItem({
-          entity_name: item.entity_name,
-          entity_type: item.entity_type,
-          descriptions: item.description.split('<SEP>'),
-          properties: item.additional_properties.split('<SEP>')
-        });
-      }
-      )
-  }, [key]);
-
-  const options = useMemo(
-    () => {
-      let groupedNodesByCluster = {};
-      let createStyle = () => ({});
-
-      let hyperData = {
-        nodes: [],
-        edges: [],
-      };
-      let plugins = [];
-      if (data) {
-        for (const key in data.vertices) {
-          hyperData.nodes.push({
-            id: key,
-            label: key,
-            ...data.vertices[key],
-          });
+        // 设置默认选中第一个vertex
+        if (data && data.length > 0) {
+          setKey(data[0]);
         }
-
-        createStyle = (baseColor) => ({
-          fill: baseColor,
-          stroke: baseColor,
-          labelFill: '#fff',
-          labelPadding: 2,
-          labelBackgroundFill: baseColor,
-          labelBackgroundRadius: 5,
-          labelPlacement: 'center',
-          labelAutoRotate: false,
-          // bubblesets
-          maxRoutingIterations: 100,
-          maxMarchingIterations: 20,
-          pixelGroup: 4,
-          edgeR0: 10,
-          edgeR1: 60,
-          nodeR0: 15,
-          nodeR1: 50,
-          morphBuffer: 10,
-          threshold: 1,
-          memberInfluenceFactor: 1,
-          edgeInfluenceFactor: 1,
-          nonMemberInfluenceFactor: -0.8,
-          virtualEdges: true,
-        });
-
-        const keys = Object.keys(data.edges);
-        for (let i = 0; i < keys.length; i++) {
-          const key = keys[i];
-          const edge = data.edges[key];
-          const nodes = key.split('|#|');
-          groupedNodesByCluster[key] = nodes;
-          plugins.push({
-            key: `bubble-sets-${key}`,
-            type: 'bubble-sets',
-            members: nodes,
-            labelText: '' + edge.keywords,
-            ...createStyle(colors[i % 10]),
-          });
-        }
-      }
-
-      plugins.push({
-        type: 'tooltip',
-        getContent: (e, items) => {
-          let result = '';
-          items.forEach((item) => {
-            result += `<h4>${item.id}</h4><p>${item.description}</p>`;
-          });
-          return result;
-        },
+        setLoading(false);
       })
+      .catch((error) => {
+        console.error('获取vertices失败:', error);
+        setLoading(false);
+      });
+  }, [storeGlobalUser.selectedDatabase]);
 
-      console.log(hyperData);
+  // 获取选中实体的详细信息（用于右侧详情展示）
+  useEffect(() => {
+    if (!key || !storeGlobalUser.selectedDatabase) return;
 
-      return {
-        autoResize: true,
-        data: hyperData,
-        node: {
-          palette: { field: 'cluster' },
-          style: {
-            labelText: d => d.id,
-          }
-        },
-        animate: false,
-        behaviors: [
-          // {
-          //   type: 'click-select',
-          //   degree: 1,
-          //   state: 'active',
-          //   unselectedState: 'inactive',
-          //   multiple: true,
-          //   trigger: ['shift'],
-          // },
-          'zoom-canvas', 'drag-canvas', 'drag-element',
-        ],
-        autoFit: 'center',
-        layout: {
-          type: 'force',
-          // enableWorker: true,
-          clustering: true,
-          preventOverlap: true,
-          // linkDistance: 700,
-          nodeClusterBy: 'entity_type',
-          gravity: 20
-        },
-        plugins,
-      }
-    },
-    [data],
-  );
+    const url = `${SERVER_URL}/db/vertices_neighbor/${encodeURIComponent(key)}?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        const item = data.vertices[key];
+        if (item) {
+          setItem({
+            entity_name: item.entity_name,
+            entity_type: item.entity_type,
+            descriptions: item.description ? item.description.split('<SEP>') : [''],
+            properties: item.additional_properties ? item.additional_properties.split('<SEP>') : ['']
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('获取邻居数据失败:', error);
+      });
+  }, [key, storeGlobalUser.selectedDatabase]);
 
-  if (!data) return <p>Loading...</p>;
+  // 数据库切换处理
+  const onDatabaseChange = () => {
+    // 清空选择
+    setKey(undefined);
+    setItem({
+      entity_name: '',
+      entity_type: '',
+      descriptions: [''],
+      properties: ['']
+    });
+  };
 
-  return <>
-    选择实体：<Select onChange={setKey} style={{ width: 300 }} defaultValue={'刘伯钦'} showSearch>
-      {keys.map((key) => {
-        return <Select.Option key={key} value={key} >{key}</Select.Option>
-      })}
-    </Select>
-    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Graphin options={options} id="my-graphin-demo"
-      className="my-graphin-container"
-        style={{ width: '100%', height: '80vh' }} />
-      <Card
-        title={item.entity_name}
-        style={{ width: 400, margin: '20px' }}
-      >
-        <div>
-          <p><strong>类型:</strong> {item.entity_type}</p>
+  // 渲染加载状态
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '400px',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <Spin size="large" />
+        <div>正在加载数据...</div>
+      </div>
+    );
+  }
 
-          <div style={{ margin: '10px 0' }}>
-            <strong>描述:</strong>
-            {item.descriptions?.map((desc, index) => (
-              <p key={index}>{desc}</p>
-            ))}
-          </div>
+  // 渲染未选择数据库状态
+  if (!storeGlobalUser.selectedDatabase) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '400px',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <DatabaseOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
+        <div>请先选择一个数据库</div>
+        <DatabaseSelector
+          mode="select"
+          showRefresh={true}
+          size="middle"
+          onChange={onDatabaseChange}
+        />
+      </div>
+    );
+  }
 
-          <div style={{ margin: '10px 0' }}>
-            <strong>特征:</strong>
-            <div style={{ marginTop: '8px' }}>
-              {item.properties?.map((prop, index) => (
-                <Tag key={index} color="blue" style={{ margin: '4px' }}>
-                  {prop}
-                </Tag>
-              ))}
-            </div>
-          </div>
+  // 渲染无数据状态
+  if (!keys || keys.length === 0) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '400px',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <DatabaseOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
+        <div>当前数据库没有实体数据</div>
+        <div style={{ color: '#999' }}>数据库: {storeGlobalUser.selectedDatabase}</div>
+        <DatabaseSelector
+          mode="select"
+          showRefresh={true}
+          size="middle"
+          onChange={onDatabaseChange}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <DatabaseSelector
+          mode="compact"
+          showRefresh={false}
+          size="middle"
+          onChange={onDatabaseChange}
+        />
+
+        <span>选择实体：</span>
+        <Select
+          onChange={setKey}
+          style={{ width: 300 }}
+          value={key}
+          showSearch
+          placeholder="请选择实体"
+        >
+          {keys.map((vertexKey) => (
+            <Select.Option key={vertexKey} value={vertexKey}>
+              {vertexKey}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+        {/* 使用HyperGraph组件展示超图 */}
+        <div style={{ width: '70%', height: '600px' }}>
+          <HyperGraph
+            vertexId={key}
+            database={storeGlobalUser.selectedDatabase}
+            height="600px"
+            width="100%"
+            showTooltip={true}
+            graphId="graph-page-hypergraph"
+          />
         </div>
-      </Card>
-    </div>
-  </>
-}
+
+        {/* 实体详情卡片 */}
+        <Card 
+          title="实体详情"
+          style={{ width: '28%', height: '600px', overflow: 'auto' }}
+        >
+          <p><strong>实体名称:</strong> {item.entity_name}</p>
+          <p><strong>实体类型:</strong> <Tag color="blue">{item.entity_type}</Tag></p>
+          <p><strong>描述:</strong></p>
+          <ul>
+            {item.descriptions.map((desc, idx) => (
+              <li key={idx}>{desc}</li>
+            ))}
+          </ul>
+          <p><strong>属性:</strong></p>
+          <ul>
+            {item.properties.map((prop, idx) => (
+              <li key={idx}>{prop}</li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </>
+  );
+};
+
+export default observer(GraphPage);

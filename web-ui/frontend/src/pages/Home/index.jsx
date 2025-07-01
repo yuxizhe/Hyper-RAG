@@ -24,7 +24,10 @@ import {
   SmileOutlined,
   RightOutlined
 } from '@ant-design/icons'
-import { Badge, Button, Space } from 'antd'
+import { Badge, Button, Space, message } from 'antd'
+import { storeGlobalUser } from '../../store/globalUser'
+import DatabaseSelector from '../../components/DatabaseSelector'
+
 const renderTitle = (icon, title) => (
   <Space align="start">
     {icon}
@@ -250,6 +253,13 @@ const Independent = () => {
   const { onRequest, messages, setMessages } = useXChat({
     agent
   })
+
+  // 初始化数据库
+  useEffect(() => {
+    storeGlobalUser.restoreSelectedDatabase()
+    storeGlobalUser.loadDatabases()
+  }, [])
+
   useEffect(() => {
     if (activeKey !== undefined) {
       setMessages([])
@@ -265,7 +275,10 @@ const Independent = () => {
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: nextContent }),
+        body: JSON.stringify({
+          message: nextContent,
+          database: storeGlobalUser.selectedDatabase
+        }),
       });
       if (!response.ok) {
         throw new Error('网络响应异常');
@@ -286,10 +299,11 @@ const Independent = () => {
             status: 'ai', // 
           }
       ]);      
-      处理后端返回的消息
+      // 处理后端返回的消息
       onRequest(data.response); // 
   } catch (error) {
       console.error('发送消息时出错:', error);
+      message.error('发送消息失败: ' + error.message);
   }     
     // onRequest(nextContent)
     setContent('')
@@ -399,48 +413,12 @@ const Independent = () => {
       <div className={styles.topMenu}>
         <div style={{ fontWeight: 700 }}>知识库选择</div>
         <div style={{ display: 'flex', gap: 8, flex: 1, marginLeft: 20, alignItems: 'center' }}>
-          <Button
-            className={styles.topCard}
-            style={{
-              background: '#1677ff0f',
-              border: '1px solid #1677ff34'
-            }}
-          >西游记</Button>
-          <Button
-            className={styles.topCard}
-
-          >三国演义</Button>
-
-          <Button
-            className={styles.topCard}
-
-          >金融</Button>
-          <Button
-            className={styles.topCard}
-
-          >财报</Button>
-          <Button
-            className={styles.topCard}
-
-          >研报</Button>
-          <Button
-            className={styles.topCard}
-
-          >基金</Button>
-          <Button
-            className={styles.topCard}
-
-          >股票</Button>
-          <Button
-            className={styles.topCard}
-
-          >农业</Button>
-          <Button
-            className={styles.topCard}
-
-          >医学</Button>
-
-          <Button icon={<RightOutlined />} />
+          <DatabaseSelector
+            mode="buttons"
+            showRefresh={true}
+            size="small"
+            style={{ flex: 1 }}
+          />
         </div>
       </div>
       <div className={styles.layout}>
