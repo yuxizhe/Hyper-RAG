@@ -1,11 +1,6 @@
-
-
-
-
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import get_hypergraph, getFrequentVertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server
+from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail
 
 app = FastAPI()
 
@@ -35,7 +30,7 @@ async def get_vertices_function():
     """
     获取vertices列表
     """
-    data = getFrequentVertices()
+    data = get_vertices()
     return data
 
 @app.get("/db/hyperedges")
@@ -45,6 +40,19 @@ async def get_hypergraph_function():
     """
     data = get_hyperedges()
     return data
+
+@app.get("/db/hyperedges/{hyperedge_id}")
+async def get_hyperedge(hyperedge_id: str):
+    """
+    获取指定hyperedge的详情
+    """
+    try:
+        hyperedge_id = hyperedge_id.replace("%20", " ")
+        vertices = hyperedge_id.split("|*|")
+        data = get_hyperedge_detail(vertices)
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/db/vertices/{vertex_id}")
 async def get_vertex(vertex_id: str):
@@ -76,6 +84,7 @@ async def get_hyperedge_neighbor(hyperedge_id: str):
     return data
 
 def llm_model_func(prompt, system_prompt=None, history_messages=[], **kwargs) -> str:
+    from openai import OpenAI
     openai_client = OpenAI(api_key="your_api_key", base_url="your_api_url")
 
     messages = []
@@ -101,3 +110,113 @@ async def process_message(msg: Message):
     except Exception as e:
         return {"response": str(e)} 
     return {"response": response_message}
+
+class VertexModel(BaseModel):
+    vertex_id: str
+    entity_name: str = ""
+    entity_type: str = ""
+    description: str = ""
+    additional_properties: str = ""
+
+class HyperedgeModel(BaseModel):
+    vertices: list
+    keywords: str = ""
+    summary: str = ""
+
+class VertexUpdateModel(BaseModel):
+    entity_name: str = ""
+    entity_type: str = ""
+    description: str = ""
+    additional_properties: str = ""
+
+class HyperedgeUpdateModel(BaseModel):
+    keywords: str = ""
+    summary: str = ""
+
+@app.post("/db/vertices")
+async def create_vertex(vertex: VertexModel):
+    """
+    创建新的vertex
+    """
+    try:
+        result = add_vertex(vertex.vertex_id, {
+            "entity_name": vertex.entity_name,
+            "entity_type": vertex.entity_type,
+            "description": vertex.description,
+            "additional_properties": vertex.additional_properties
+        })
+        return {"success": True, "message": "Vertex created successfully", "data": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.post("/db/hyperedges")
+async def create_hyperedge(hyperedge: HyperedgeModel):
+    """
+    创建新的hyperedge
+    """
+    try:
+        result = add_hyperedge(hyperedge.vertices, {
+            "keywords": hyperedge.keywords,
+            "summary": hyperedge.summary
+        })
+        return {"success": True, "message": "Hyperedge created successfully", "data": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.put("/db/vertices/{vertex_id}")
+async def update_vertex_endpoint(vertex_id: str, vertex: VertexUpdateModel):
+    """
+    更新vertex信息
+    """
+    try:
+        vertex_id = vertex_id.replace("%20", " ")
+        result = update_vertex(vertex_id, {
+            "entity_name": vertex.entity_name,
+            "entity_type": vertex.entity_type,
+            "description": vertex.description,
+            "additional_properties": vertex.additional_properties
+        })
+        return {"success": True, "message": "Vertex updated successfully", "data": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.put("/db/hyperedges/{hyperedge_id}")
+async def update_hyperedge_endpoint(hyperedge_id: str, hyperedge: HyperedgeUpdateModel):
+    """
+    更新hyperedge信息
+    """
+    try:
+        hyperedge_id = hyperedge_id.replace("%20", " ")
+        vertices = hyperedge_id.split("|*|")
+        result = update_hyperedge(vertices, {
+            "keywords": hyperedge.keywords,
+            "summary": hyperedge.summary
+        })
+        return {"success": True, "message": "Hyperedge updated successfully", "data": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.delete("/db/vertices/{vertex_id}")
+async def delete_vertex_endpoint(vertex_id: str):
+    """
+    删除vertex
+    """
+    try:
+        vertex_id = vertex_id.replace("%20", " ")
+        result = delete_vertex(vertex_id)
+        return {"success": True, "message": "Vertex deleted successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.delete("/db/hyperedges/{hyperedge_id}")
+async def delete_hyperedge_endpoint(hyperedge_id: str):
+    """
+    删除hyperedge
+    """
+    try:
+        hyperedge_id = hyperedge_id.replace("%20", " ")
+        vertices = hyperedge_id.split("|*|")
+        result = delete_hyperedge(vertices)
+        return {"success": True, "message": "Hyperedge deleted successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}

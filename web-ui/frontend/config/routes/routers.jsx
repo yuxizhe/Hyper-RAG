@@ -4,6 +4,7 @@ import ErrorPage from '@/ErrorPage'
 import Home from '@/pages/Home'
 import Files from '@/pages/Hyper/Files'
 import Graph from '@/pages/Hyper/Graph'
+import HyperDB from '@/pages/Hyper/DB'
 import { HomeFilled, SmileFilled, FileAddOutlined, QuestionCircleOutlined, DeploymentUnitOutlined, DatabaseOutlined, SettingOutlined } from '@ant-design/icons'
 import { Navigate } from 'react-router-dom'
 
@@ -43,7 +44,7 @@ export const routers = [
         name: 'HypergraphDB',
         icon: <DatabaseOutlined />,
         // permissionObj: true,
-        element: <Home />
+        element: <HyperDB />
       },
       {
         path: '/Setting',
