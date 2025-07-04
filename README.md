@@ -117,7 +117,7 @@ python examples/hyperrag_demo.py
 
 ### Or Run by Steps
 
-1. Prepare the data. You can download the dataset from <a href="https://cloud.tsinghua.edu.cn/d/187386488d5c404a83a5/">here</a>. Put the dataset in the root direction. Then run the following command to preprocess the data.
+1. Prepare the data. You can download the dataset from <a href="https://pan.baidu.com/s/1mrDJVpMW59gLtRRSXafXdw?pwd=w642">here</a>. Put the dataset in the root direction. Then run the following command to preprocess the data.
 
 ```bash
 python reproduce/Step_0.py
