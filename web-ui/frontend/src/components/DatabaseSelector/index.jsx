@@ -96,13 +96,7 @@ const DatabaseSelector = ({
                         </div>
                     </Option>
                 ))}
-            </Select>
-
-            {showCurrent && storeGlobalUser.selectedDatabase && (
-                <Text type="secondary">
-                    当前: {storeGlobalUser.selectedDatabase}
-                </Text>
-            )}
+            </Select>   
 
             {showRefresh && (
                 <Button

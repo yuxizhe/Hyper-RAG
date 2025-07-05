@@ -29,6 +29,7 @@ import {
     DatabaseOutlined
 } from '@ant-design/icons';
 import { observer } from 'mobx-react';
+import { useTranslation } from 'react-i18next';
 import { storeGlobalUser } from '../../../store/globalUser';
 import DatabaseSelector from '../../../components/DatabaseSelector';
 
@@ -42,6 +43,7 @@ const { TabPane } = Tabs;
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
 
 const HyperDB = () => {
+    const { t } = useTranslation();
     const [vertices, setVertices] = useState([]);
     const [hyperedges, setHyperedges] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -105,7 +107,7 @@ const HyperDB = () => {
             setHyperedges(hyperedgesData);
         } catch (error) {
             console.error('Fetch error:', error);
-            message.error('获取数据失败：' + error.message);
+            message.error(t('database.fetch_data_failed') + '：' + error.message);
         }
         setLoading(false);
     };
@@ -125,7 +127,7 @@ const HyperDB = () => {
             const data = await response.json();
             return data;
         } catch (error) {
-            message.error('获取vertex详情失败：' + error.message);
+            message.error(t('database.fetch_vertex_detail_failed') + '：' + error.message);
             return null;
         }
     };
@@ -138,7 +140,7 @@ const HyperDB = () => {
             const data = await response.json();
             return data;
         } catch (error) {
-            message.error('获取hyperedge详情失败：' + error.message);
+            message.error(t('database.fetch_hyperedge_detail_failed') + '：' + error.message);
             return null;
         }
     };
@@ -184,7 +186,7 @@ const HyperDB = () => {
                 message.error(result.message);
             }
         } catch (error) {
-            message.error('操作失败：' + error.message);
+            message.error(t('database.operation_failed') + '：' + error.message);
         }
         setLoading(false);
     };
@@ -236,7 +238,7 @@ const HyperDB = () => {
                 message.error(result.message);
             }
         } catch (error) {
-            message.error('操作失败：' + error.message);
+            message.error(t('database.operation_failed') + '：' + error.message);
         }
         setLoading(false);
     };
@@ -259,7 +261,7 @@ const HyperDB = () => {
                 message.error(result.message);
             }
         } catch (error) {
-            message.error('删除失败：' + error.message);
+            message.error(t('database.delete_failed') + '：' + error.message);
         }
         setLoading(false);
     };
@@ -282,7 +284,7 @@ const HyperDB = () => {
                 message.error(result.message);
             }
         } catch (error) {
-            message.error('删除失败：' + error.message);
+            message.error(t('database.delete_failed') + '：' + error.message);
         }
         setLoading(false);
     };
@@ -314,7 +316,7 @@ const HyperDB = () => {
                         });
                     }
                 } catch (error) {
-                    message.error('获取vertex详情失败：' + error.message);
+                    message.error(t('database.fetch_vertex_detail_failed') + '：' + error.message);
                 } finally {
                     setModalLoading(false);
                 }
@@ -334,7 +336,7 @@ const HyperDB = () => {
                             });
                         }
                     } catch (error) {
-                        message.error('获取hyperedge详情失败：' + error.message);
+                        message.error(t('database.fetch_hyperedge_detail_failed') + '：' + error.message);
                     } finally {
                         setModalLoading(false);
                     }
@@ -353,7 +355,7 @@ const HyperDB = () => {
                             });
                         }
                     } catch (error) {
-                        message.error('获取hyperedge详情失败：' + error.message);
+                        message.error(t('database.fetch_hyperedge_detail_failed') + '：' + error.message);
                     } finally {
                         setModalLoading(false);
                     }
@@ -368,14 +370,14 @@ const HyperDB = () => {
     // Vertices表格列定义
     const vertexColumns = [
         {
-            title: 'Vertex ID',
+            title: t('database.vertex_id'),
             dataIndex: 'vertex_id',
             key: 'vertex_id',
             width: 200,
             render: (text) => <Tag color="blue">{text}</Tag>,
         },
         {
-            title: '操作',
+            title: t('database.action'),
             key: 'action',
             width: 100,
             render: (_, record) => (
@@ -385,23 +387,23 @@ const HyperDB = () => {
                         icon={<EyeOutlined />}
                         onClick={() => openModal('view', 'vertex', record.vertex_id)}
                     >
-                        查看
+                        {t('database.view')}
                     </Button>
                     <Button
                         type="link"
                         icon={<EditOutlined />}
                         onClick={() => openModal('edit', 'vertex', record.vertex_id)}
                     >
-                        编辑
+                        {t('database.edit')}
                     </Button>
                     <Popconfirm
-                        title="确定要删除这个vertex吗？"
+                        title={t('database.confirm_delete_vertex')}
                         onConfirm={() => handleDeleteVertex(record.vertex_id)}
-                        okText="确定"
-                        cancelText="取消"
+                        okText={t('database.confirm')}
+                        cancelText={t('database.cancel')}
                     >
                         <Button type="link" danger icon={<DeleteOutlined />}>
-                            删除
+                            {t('database.delete')}
                         </Button>
                     </Popconfirm>
                 </Space>
@@ -412,7 +414,7 @@ const HyperDB = () => {
     // Hyperedges表格列定义
     const hyperedgeColumns = [
         {
-            title: 'Hyperedge',
+            title: t('database.hyperedge'),
             dataIndex: 'hyperedge_id',
             key: 'hyperedge_id',
             width: 200,
@@ -420,9 +422,9 @@ const HyperDB = () => {
                 const vertices = text.split('|*|');
                 const tooltipContent = (
                     <div>
-                        <div><strong>顶点数量:</strong> {vertices.length}</div>
-                        {record.keywords && <div><strong>关键词:</strong> {record.keywords}</div>}
-                        {record.summary && <div><strong>摘要:</strong> {record.summary}</div>}
+                        <div><strong>{t('database.vertex_count')}:</strong> {vertices.length}</div>
+                        {record.keywords && <div><strong>{t('database.keywords')}:</strong> {record.keywords}</div>}
+                        {record.summary && <div><strong>{t('database.summary')}:</strong> {record.summary}</div>}
                     </div>
                 );
 
@@ -440,14 +442,14 @@ const HyperDB = () => {
             },
         },
         {
-            title: '描述',
+            title: t('database.description'),
             dataIndex: 'description',
             key: 'description',
             width: 200,
             render: (text) => text || '-',
         },
         {
-            title: '操作',
+            title: t('database.action'),
             key: 'action',
             width: 100,
             render: (_, record) => (
@@ -457,23 +459,23 @@ const HyperDB = () => {
                         icon={<EyeOutlined />}
                         onClick={() => openModal('view', 'hyperedge', record.hyperedge_id)}
                     >
-                        查看
+                        {t('database.view')}
                     </Button>
                     <Button
                         type="link"
                         icon={<EditOutlined />}
                         onClick={() => openModal('edit', 'hyperedge', record.hyperedge_id)}
                     >
-                        编辑
+                        {t('database.edit')}
                     </Button>
                     <Popconfirm
-                        title="确定要删除这个hyperedge吗？"
+                        title={t('database.confirm_delete_hyperedge')}
                         onConfirm={() => handleDeleteHyperedge(record.hyperedge_id)}
-                        okText="确定"
-                        cancelText="取消"
+                        okText={t('database.confirm')}
+                        cancelText={t('database.cancel')}
                     >
                         <Button type="link" danger icon={<DeleteOutlined />}>
-                            删除
+                            {t('database.delete')}
                         </Button>
                     </Popconfirm>
                 </Space>
@@ -507,7 +509,7 @@ const HyperDB = () => {
             <Card style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <h3 style={{ margin: 0 }}>数据库管理</h3>
+                        <h3 style={{ margin: 0 }}>{t('database.title')}</h3>
                         <DatabaseSelector
                             mode="select"
                             // showRefresh={true}
@@ -520,10 +522,10 @@ const HyperDB = () => {
                 {storeGlobalUser.selectedDatabase && (
                     <Row gutter={16} style={{ marginTop: 16 }}>
                         <Col span={6}>
-                            <Statistic title="实体数量" value={vertices.length} prefix={<DatabaseOutlined />} />
+                            <Statistic title={t('database.entity_count')} value={vertices.length} prefix={<DatabaseOutlined />} />
                         </Col>
                         <Col span={6}>
-                            <Statistic title="超边数量" value={hyperedges.length} prefix={<DatabaseOutlined />} />
+                            <Statistic title={t('database.hyperedge_count')} value={hyperedges.length} prefix={<DatabaseOutlined />} />
                         </Col>
                     </Row>
                 )}
@@ -533,14 +535,14 @@ const HyperDB = () => {
             {storeGlobalUser.selectedDatabase ? (
                 <div className='flex  gap-4'>
                     {/* Vertices表格 */}
-                    <Card title="实体 (Vertices)" style={{ marginBottom: 24 }}
+                    <Card title={t('database.vertices')} style={{ marginBottom: 24 }}
                         extra={
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 onClick={() => openModal('add', 'vertex')}
                             >
-                                添加 Vertex
+                                {t('database.add_vertex')}
                             </Button>
                         }
                     >
@@ -555,7 +557,7 @@ const HyperDB = () => {
                     </Card>
 
                     {/* Hyperedges表格 */}
-                    <Card title="超边 (Hyperedges)"
+                    <Card title={t('database.hyperedges')}
                         className='flex-1'
                         extra={
                             <Button
@@ -563,7 +565,7 @@ const HyperDB = () => {
                                 icon={<PlusOutlined />}
                                 onClick={() => openModal('add', 'hyperedge')}
                             >
-                                添加 Hyperedge
+                                {t('database.add_hyperedge')}
                             </Button>
                         }
                     >
@@ -579,8 +581,8 @@ const HyperDB = () => {
             ) : (
                 <Card style={{ textAlign: 'center', padding: '60px 0' }}>
                     <DatabaseOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: 16 }} />
-                    <h3>请选择一个数据库</h3>
-                    <p style={{ color: '#999' }}>选择数据库后即可查看和管理数据</p>
+                        <h3>{t('database.select_database_prompt')}</h3>
+                        <p style={{ color: '#999' }}>{t('database.select_database_help')}</p>
                 </Card>
             )}
 
@@ -588,10 +590,10 @@ const HyperDB = () => {
             <Modal
                 title={
                     modalType === 'add'
-                        ? `添加 ${modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge'}`
+                        ? t('database.add') + ' ' + (modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge')
                         : modalType === 'edit'
-                            ? `编辑 ${modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge'}`
-                            : `查看 ${modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge'}`
+                            ? t('database.edit') + ' ' + (modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge')
+                            : t('database.view') + ' ' + (modalDataType === 'vertex' ? 'Vertex' : 'Hyperedge')
                 }
                 open={modalVisible}
                 onCancel={() => {
@@ -604,14 +606,14 @@ const HyperDB = () => {
                         setModalVisible(false);
                         setModalLoading(false);
                     }}>
-                        关闭
+                        {t('database.close')}
                     </Button>
                 ] : [
                     <Button key="cancel" onClick={() => {
                         setModalVisible(false);
                         setModalLoading(false);
                     }}>
-                        取消
+                        {t('database.cancel')}
                     </Button>,
                     <Button
                         key="submit"
@@ -619,18 +621,18 @@ const HyperDB = () => {
                         loading={loading}
                         onClick={() => form.submit()}
                     >
-                        {modalType === 'add' ? '添加' : '更新'}
+                        {modalType === 'add' ? t('database.add') : t('database.update')}
                     </Button>
                 ]}
                 width={modalType === 'view' && modalDataType === 'vertex' ? 1200 : 600}
             >
-                <Spin spinning={modalLoading} tip="加载数据中...">
+                <Spin spinning={modalLoading} tip={t('database.loading_data')}>
                     {modalType === 'view' && modalDataType === 'vertex' ? (
                         // 查看Vertex时并列显示详细信息和超图
                         <div style={{ display: 'flex', gap: '20px', height: '500px' }}>
                             {/* 左侧：详细信息 */}
                             <div style={{ flex: '0 0 400px', overflowY: 'auto' }}>
-                                <Card title="详细信息" size="small" style={{ height: '100%' }}>
+                                <Card title={t('database.detail_info')} size="small" style={{ height: '100%' }}>
                                     <Form
                                         form={form}
                                         layout="vertical"
@@ -638,20 +640,20 @@ const HyperDB = () => {
                                     >
                                         <Form.Item
                                             name="vertex_id"
-                                            label="Vertex ID"
+                                            label={t('database.vertex_id')}
                                         >
                                             <Input disabled />
                                         </Form.Item>
-                                        <Form.Item name="entity_name" label="实体名称">
+                                        <Form.Item name="entity_name" label={t('database.entity_name')}>
                                             <Input disabled />
                                         </Form.Item>
-                                        <Form.Item name="entity_type" label="实体类型">
+                                        <Form.Item name="entity_type" label={t('database.entity_type')}>
                                             <Input disabled />
                                         </Form.Item>
-                                        <Form.Item name="description" label="描述">
+                                        <Form.Item name="description" label={t('database.description')}>
                                             <TextArea rows={4} disabled />
                                         </Form.Item>
-                                        <Form.Item name="additional_properties" label="附加属性">
+                                        <Form.Item name="additional_properties" label={t('database.additional_properties')}>
                                             <TextArea rows={4} disabled />
                                         </Form.Item>
                                     </Form>
@@ -660,7 +662,7 @@ const HyperDB = () => {
 
                             {/* 右侧：关系图谱 */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <Card title="关系图谱" size="small" style={{ height: '100%' }}>
+                                <Card title={t('database.relation_graph')} size="small" style={{ height: '100%' }}>
                                     <div style={{ height: 'calc(100% - 40px)' }}>
                                         <HyperGraph
                                             vertexId={selectedRecord}
@@ -685,31 +687,31 @@ const HyperDB = () => {
                                     <>
                                         <Form.Item
                                             name="vertex_id"
-                                            label="Vertex ID"
-                                            rules={[{ required: modalType === 'add', message: '请输入Vertex ID' }]}
+                                            label={t('database.vertex_id')}
+                                            rules={[{ required: modalType === 'add', message: t('database.vertex_id_required') }]}
                                         >
                                             <Input
-                                                placeholder="输入唯一的Vertex ID"
+                                                placeholder={t('database.enter_vertex_id')}
                                                 disabled={modalType !== 'add'}
                                             />
                                         </Form.Item>
-                                        <Form.Item name="entity_name" label="实体名称">
-                                            <Input placeholder="输入实体名称" disabled={modalType === 'view'} />
+                                        <Form.Item name="entity_name" label={t('database.entity_name')}>
+                                            <Input placeholder={t('database.enter_entity_name')} disabled={modalType === 'view'} />
                                         </Form.Item>
-                                        <Form.Item name="entity_type" label="实体类型">
-                                            <Input placeholder="输入实体类型" disabled={modalType === 'view'} />
+                                        <Form.Item name="entity_type" label={t('database.entity_type')}>
+                                            <Input placeholder={t('database.enter_entity_type')} disabled={modalType === 'view'} />
                                         </Form.Item>
-                                        <Form.Item name="description" label="描述">
+                                        <Form.Item name="description" label={t('database.description')}>
                                             <TextArea
                                                 rows={3}
-                                                placeholder="输入描述信息，多个描述用<SEP>分隔"
+                                                placeholder={t('database.enter_description')}
                                                 disabled={modalType === 'view'}
                                             />
                                         </Form.Item>
-                                        <Form.Item name="additional_properties" label="附加属性">
+                                        <Form.Item name="additional_properties" label={t('database.additional_properties')}>
                                             <TextArea
                                                 rows={3}
-                                                placeholder="输入附加属性，多个属性用<SEP>分隔"
+                                                placeholder={t('database.enter_additional_properties')}
                                                 disabled={modalType === 'view'}
                                             />
                                         </Form.Item>
@@ -718,12 +720,12 @@ const HyperDB = () => {
                             <>
                                 {modalType === 'view' && (
                                     <Card
-                                        title="Hyperedge 信息"
+                                                    title={t('database.hyperedge_info')}
                                         size="small"
                                         style={{ marginBottom: '16px' }}
                                     >
                                         <Descriptions size="small" column={1}>
-                                            <Descriptions.Item label="包含顶点">
+                                                        <Descriptions.Item label={t('database.contained_vertices')}>
                                                 {selectedRecord && selectedRecord.split('|*|').map((vertex, index) => (
                                                     <Tag key={index} color="blue" style={{ margin: '2px' }}>
                                                         {vertex}
@@ -736,24 +738,24 @@ const HyperDB = () => {
 
                                 <Form.Item
                                     name="vertices"
-                                    label="Vertices"
-                                    rules={[{ required: modalType === 'add', message: '请输入vertices' }]}
+                                                label={t('database.vertices_title')}
+                                                rules={[{ required: modalType === 'add', message: t('database.vertices_required') }]}
                                 >
                                     <Input
-                                        placeholder="输入vertices，用逗号分隔，如：vertex1, vertex2, vertex3"
+                                                    placeholder={t('database.enter_vertices')}
                                         disabled={modalType === 'edit' || modalType === 'view'}
                                     />
                                 </Form.Item>
-                                <Form.Item name="keywords" label="关键词">
+                                            <Form.Item name="keywords" label={t('database.keywords')}>
                                     <Input
-                                        placeholder="输入关键词，多个关键词用逗号分隔"
+                                                    placeholder={t('database.enter_keywords')}
                                         disabled={modalType === 'view'}
                                     />
                                 </Form.Item>
-                                <Form.Item name="summary" label="摘要">
+                                            <Form.Item name="summary" label={t('database.summary')}>
                                     <TextArea
                                         rows={3}
-                                        placeholder="输入摘要信息"
+                                                    placeholder={t('database.enter_summary')}
                                         disabled={modalType === 'view'}
                                     />
                                 </Form.Item>

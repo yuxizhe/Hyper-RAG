@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Select, Card, Tag, Spin } from 'antd';
 import { observer } from 'mobx-react';
+import { useTranslation } from 'react-i18next';
 import { storeGlobalUser } from '../../../store/globalUser';
 import HyperGraph from '../../../components/HyperGraph';
 import DatabaseSelector from '../../../components/DatabaseSelector';
@@ -9,6 +10,7 @@ import { DatabaseOutlined } from '@ant-design/icons';
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const GraphPage = () => {
+  const { t } = useTranslation();
   const [keys, setKeys] = useState(undefined);
   const [key, setKey] = useState(undefined);
   const [loading, setLoading] = useState(false);
@@ -42,10 +44,10 @@ const GraphPage = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('获取vertices失败:', error);
+        console.error(t('graph.fetch_vertices_failed') + ':', error);
         setLoading(false);
       });
-  }, [storeGlobalUser.selectedDatabase]);
+  }, [storeGlobalUser.selectedDatabase, t]);
 
   // 获取选中实体的详细信息（用于右侧详情展示）
   useEffect(() => {
@@ -66,9 +68,9 @@ const GraphPage = () => {
         }
       })
       .catch((error) => {
-        console.error('获取邻居数据失败:', error);
+        console.error(t('graph.fetch_neighbor_data_failed') + ':', error);
       });
-  }, [key, storeGlobalUser.selectedDatabase]);
+  }, [key, storeGlobalUser.selectedDatabase, t]);
 
   // 数据库切换处理
   const onDatabaseChange = () => {
@@ -94,7 +96,7 @@ const GraphPage = () => {
         gap: '16px'
       }}>
         <Spin size="large" />
-        <div>正在加载数据...</div>
+        <div>{t('graph.loading_data')}</div>
       </div>
     );
   }
@@ -111,7 +113,7 @@ const GraphPage = () => {
         gap: '16px'
       }}>
         <DatabaseOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
-        <div>请先选择一个数据库</div>
+        <div>{t('graph.select_database_first')}</div>
         <DatabaseSelector
           mode="select"
           showRefresh={true}
@@ -134,8 +136,8 @@ const GraphPage = () => {
         gap: '16px'
       }}>
         <DatabaseOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
-        <div>当前数据库没有实体数据</div>
-        <div style={{ color: '#999' }}>数据库: {storeGlobalUser.selectedDatabase}</div>
+        <div>{t('graph.no_entity_data')}</div>
+        <div style={{ color: '#999' }}>{t('graph.database_label')}: {storeGlobalUser.selectedDatabase}</div>
         <DatabaseSelector
           mode="select"
           showRefresh={true}
@@ -149,7 +151,7 @@ const GraphPage = () => {
   return (
     <>
       <div className='m-4' style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 5 }}>
-        <span>超图数据库：</span>
+        <span>{t('graph.hypergraph_database')}</span>
         <DatabaseSelector
           mode="compact"
           showRefresh={false}
@@ -157,13 +159,13 @@ const GraphPage = () => {
           onChange={onDatabaseChange}
         />
 
-        <span className='ml-4'>选择实体：</span>
+        <span className='ml-4'>{t('graph.select_entity')}</span>
         <Select
           onChange={setKey}
           style={{ width: 300 }}
           value={key}
           showSearch
-          placeholder="请选择实体"
+          placeholder={t('graph.select_entity_placeholder')}
         >
           {keys.map((vertexKey) => (
             <Select.Option key={vertexKey} value={vertexKey}>
@@ -188,18 +190,18 @@ const GraphPage = () => {
 
         {/* 实体详情卡片 */}
         <Card 
-          title="实体详情"
+          title={t('graph.entity_details')}
           style={{ width: '28%', height: '600px', overflow: 'auto' }}
         >
-          <p><strong>实体名称:</strong> {item.entity_name}</p>
-          <p><strong>实体类型:</strong> <Tag color="blue">{item.entity_type}</Tag></p>
-          <p><strong>描述:</strong></p>
+          <p><strong>{t('graph.entity_name')}:</strong> {item.entity_name}</p>
+          <p><strong>{t('graph.entity_type')}:</strong> <Tag color="blue">{item.entity_type}</Tag></p>
+          <p><strong>{t('graph.description')}:</strong></p>
           <ul>
             {item.descriptions.map((desc, idx) => (
               <li key={idx}>{desc}</li>
             ))}
           </ul>
-          <p><strong>属性:</strong></p>
+          <p><strong>{t('graph.properties')}:</strong></p>
           <ul>
             {item.properties.map((prop, idx) => (
               <li key={idx}>{prop}</li>
