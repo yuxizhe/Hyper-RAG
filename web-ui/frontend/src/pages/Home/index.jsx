@@ -1,478 +1,448 @@
-import {
-  Attachments,
-  Bubble,
-  Conversations,
-  Prompts,
-  Sender,
-  Welcome,
-  useXAgent,
-  useXChat
-} from '@ant-design/x'
-import { createStyles } from 'antd-style'
+import React, { useState, useEffect } from 'react'
 import { observer } from 'mobx-react'
-import React, { useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import { 
+    MessageCircle,
+    Send,
+    Plus,
+    Database,
+    Settings,
+    User,
+    Bot,
+    Trash2,
+    RotateCcw,
+    Loader2
+} from 'lucide-react'
 import {
-  CloudUploadOutlined,
-  CommentOutlined,
-  EllipsisOutlined,
-  FireOutlined,
-  HeartOutlined,
-  PaperClipOutlined,
-  PlusOutlined,
-  ReadOutlined,
-  ShareAltOutlined,
-  SmileOutlined,
-  RightOutlined
-} from '@ant-design/icons'
-import { Badge, Button, Space, message } from 'antd'
+    Button,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    ScrollArea,
+    Textarea,
+    Separator,
+    Avatar,
+    AvatarFallback,
+    AvatarImage
+} from '../../components/ui'
 import { storeGlobalUser } from '../../store/globalUser'
+import { SERVER_URL } from '../../utils'
 import DatabaseSelector from '../../components/DatabaseSelector'
 
-const renderTitle = (icon, title) => (
-  <Space align="start">
-    {icon}
-    <span>{title}</span>
-  </Space>
-)
-const defaultConversationsItems = [
-  {
-    key: '0',
-    label: 'What is Hyper-RAG?'
+const HyperRAGHome = () => {
+    // State
+    const [conversations, setConversations] = useState([])
+    const [activeConversationId, setActiveConversationId] = useState('')
+    const [inputValue, setInputValue] = useState('')
+    const [queryMode, setQueryMode] = useState('hyper')
+    const [isLoading, setIsLoading] = useState(false)
+
+    // Storage keys
+  const STORAGE_KEYS = {
+      CONVERSATIONS: 'hyperrag_conversations_v2',
+      ACTIVE_ID: 'hyperrag_active_conversation_v2'
   }
-]
-const useStyle = createStyles(({ token, css }) => {
-  return {
-    topMenu: css`
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 ${token.padding}px;
-      background: ${token.colorBgContainer};
-      border-radius: ${token.borderRadius}px;
-      display: flex;
-      height: 80px;
-      margin-bottom: 10px;
-      background: ${token.colorBgContainer};
-      font-family: AlibabaPuHuiTi, ${token.fontFamily}, sans-serif;
-    `,
-    topCard: css`
-      height: 60px;
-      width: 100px;
-    `,
-    layout: css`
-      width: 100%;
-      min-width: 1000px;
-      height: 600px;
-      border-radius: ${token.borderRadius}px;
-      display: flex;
-      background: ${token.colorBgContainer};
-      font-family: AlibabaPuHuiTi, ${token.fontFamily}, sans-serif;
 
-      .ant-prompts {
-        color: ${token.colorText};
-      }
-    `,
-    menu: css`
-      background: ${token.colorBgLayout}80;
-      width: 280px;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    `,
-    conversations: css`
-      padding: 0 12px;
-      flex: 1;
-      overflow-y: auto;
-    `,
-    chat: css`
-      height: 100%;
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      padding: ${token.paddingLG}px;
-      gap: 16px;
-    `,
-    messages: css`
-      flex: 1;
-    `,
-    placeholder: css`
-      padding-top: 32px;
-    `,
-    sender: css`
-      box-shadow: ${token.boxShadow};
-    `,
-    logo: css`
-      display: flex;
-      height: 72px;
-      align-items: center;
-      justify-content: start;
-      padding: 0 24px;
-      box-sizing: border-box;
-
-      img {
-        width: 24px;
-        height: 24px;
-        display: inline-block;
-      }
-
-      span {
-        display: inline-block;
-        margin: 0 8px;
-        font-weight: bold;
-        color: ${token.colorText};
-        font-size: 16px;
-      }
-    `,
-    addBtn: css`
-      background: #1677ff0f;
-      border: 1px solid #1677ff34;
-      width: calc(100% - 24px);
-      margin: 0 12px 24px 12px;
-    `
+    // Utility functions
+    const saveToStorage = () => {
+        localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(conversations))
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_ID, activeConversationId)
   }
-})
-const placeholderPromptsItems = [
-  {
-    key: '1',
-    label: renderTitle(
-      <FireOutlined
-        style={{
-          color: '#FF4D4F'
-        }}
-      />,
-      'Hot Topics'
-    ),
-    description: 'What are you interested in?',
-    children: [
-      {
-        key: '1-1',
-        description: `What's new in RAG?`
-      },
-      {
-        key: '1-2',
-        description: `What's Hyper-RAG?`
-      },
-      {
-        key: '1-3',
-        description: `Where is the doc?`
-      }
-    ]
-  },
-  {
-    key: '2',
-    label: renderTitle(
-      <ReadOutlined
-        style={{
-          color: '#1890FF'
-        }}
-      />,
-      'Design Guide'
-    ),
-    description: 'How to design a good product?',
-    children: [
-      {
-        key: '2-1',
-        icon: <HeartOutlined />,
-        description: `Know the well`
-      },
-      {
-        key: '2-2',
-        icon: <SmileOutlined />,
-        description: `Set the AI role`
-      },
-      {
-        key: '2-3',
-        icon: <CommentOutlined />,
-        description: `Express the feeling`
-      }
-    ]
-  }
-]
-const senderPromptsItems = [
-  {
-    key: '1',
-    description: 'Hot Topics',
-    icon: (
-      <FireOutlined
-        style={{
-          color: '#FF4D4F'
-        }}
-      />
-    )
-  },
-  {
-    key: '2',
-    description: 'Design Guide',
-    icon: (
-      <ReadOutlined
-        style={{
-          color: '#1890FF'
-        }}
-      />
-    )
-  }
-]
-const roles = {
-  ai: {
-    placement: 'start',
-    typing: {
-      step: 5,
-      interval: 20
-    },
-    styles: {
-      content: {
-        borderRadius: 16
-      }
-    }
-  },
-  local: {
-    placement: 'end',
-    variant: 'shadow'
-  }
-}
-const Independent = () => {
-  // ==================== Style ====================
-  const { styles } = useStyle()
 
-  // ==================== State ====================
-  const [headerOpen, setHeaderOpen] = React.useState(false)
-  const [content, setContent] = React.useState('')
-  const [conversationsItems, setConversationsItems] = React.useState(defaultConversationsItems)
-  const [activeKey, setActiveKey] = React.useState(defaultConversationsItems[0].key)
-  const [attachedFiles, setAttachedFiles] = React.useState([])
-
-  // ==================== Runtime ====================
-  const [agent] = useXAgent({
-    request: async ({ message }, { onSuccess }) => {
-      onSuccess(`Mock success return. You said: ${message}`)
-    }
-  })
-  const { onRequest, messages, setMessages } = useXChat({
-    agent
-  })
-
-  // 初始化数据库
-  useEffect(() => {
-    storeGlobalUser.restoreSelectedDatabase()
-    storeGlobalUser.loadDatabases()
-  }, [])
-
-  useEffect(() => {
-    if (activeKey !== undefined) {
-      setMessages([])
-    }
-  }, [activeKey])
-
-  // ==================== Event ====================
-  const onSubmit = async nextContent => {
-    if (!nextContent) return
+    const loadFromStorage = () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/process_message', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
+        const savedConversations = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS)
+        const savedActiveId = localStorage.getItem(STORAGE_KEYS.ACTIVE_ID)
+
+        if (savedConversations) {
+            const parsed = JSON.parse(savedConversations)
+            setConversations(parsed)
+
+            if (savedActiveId && parsed.find((c) => c.id === savedActiveId)) {
+                setActiveConversationId(savedActiveId)
+            } else if (parsed.length > 0) {
+                setActiveConversationId(parsed[0].id)
+            }
+        } else {
+            // Create default conversation
+            const defaultConv = {
+                id: 'default',
+                title: 'New Conversation',
+                messages: [],
+                createdAt: new Date()
+            }
+            setConversations([defaultConv])
+            setActiveConversationId('default')
+        }
+    } catch (error) {
+        console.error('Failed to load from storage:', error)
+    }
+  }
+
+    const createNewConversation = () => {
+        const newConv = {
+            id: Date.now().toString(),
+            title: `Chat ${new Date().toLocaleTimeString()}`,
+            messages: [],
+            createdAt: new Date()
+        }
+        setConversations(prev => [newConv, ...prev])
+        setActiveConversationId(newConv.id)
+  }
+
+    const deleteConversation = (id) => {
+        setConversations(prev => prev.filter(c => c.id !== id))
+        if (activeConversationId === id) {
+            const remaining = conversations.filter(c => c.id !== id)
+            if (remaining.length > 0) {
+                setActiveConversationId(remaining[0].id)
+            } else {
+                createNewConversation()
+            }
+    }
+  }
+
+    const clearAllChats = () => {
+        setConversations([])
+        createNewConversation()
+  }
+
+    const activeConversation = conversations.find(c => c.id === activeConversationId)
+
+    const addMessage = (content, role) => {
+        const newMessage = {
+            id: Date.now(),
+            content,
+            role,
+            timestamp: new Date()
+        }
+
+        setConversations(prev =>
+            prev.map(conv =>
+                conv.id === activeConversationId
+                    ? { ...conv, messages: [...conv.messages, newMessage] }
+                    : conv
+            )
+        )
+    }
+
+    const updateLastMessage = (content) => {
+        setConversations(prev =>
+            prev.map(conv =>
+                conv.id === activeConversationId
+                    ? {
+                        ...conv,
+                        messages: conv.messages.map((msg, index) =>
+                            index === conv.messages.length - 1
+                                ? { ...msg, content }
+                                : msg
+                        )
+                    }
+                    : conv
+            )
+        )
+    }
+
+    const handleSubmit = async () => {
+        if (!inputValue.trim() || isLoading) return
+
+        const userMessage = inputValue.trim()
+        setInputValue('')
+    setIsLoading(true)
+
+        // Add user message
+        addMessage(userMessage, 'user')
+
+        // Add loading assistant message
+        addMessage('正在思考中...', 'assistant')
+
+    try {
+      const response = await fetch(`${SERVER_URL}/hyperrag/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          message: nextContent,
+            question: userMessage,
+            mode: queryMode,
+          top_k: 60,
+          max_token_for_text_unit: 1600,
+          max_token_for_entity_context: 300,
+          max_token_for_relation_context: 1600,
+          only_need_context: false,
+          response_type: 'Multiple Paragraphs',
           database: storeGlobalUser.selectedDatabase
         }),
-      });
+      })
+
       if (!response.ok) {
-        throw new Error('网络响应异常');
+          throw new Error(`Network error: ${response.status}`)
       }
-      const data = await response.json();
-        
-        setMessages(prevMessages => [
-          ...prevMessages,
 
-          {
-              id: Date.now(), // 使用 id 代替 key
-              message: nextContent,
-              status: 'local', // 
-          },
-          {
-            id: Date.now() + 1, // 
-            message: data.response || '没有返回内容', // 
-            status: 'ai', // 
-          }
-      ]);      
-      // 处理后端返回的消息
-      onRequest(data.response); // 
-  } catch (error) {
-      console.error('发送消息时出错:', error);
-      message.error('发送消息失败: ' + error.message);
-  }     
-    // onRequest(nextContent)
-    setContent('')
-  };
-  const onPromptsItemClick = info => {
-    onRequest(info.data.description)
-  }
-  const onAddConversation = () => {
-    setConversationsItems([
-      ...conversationsItems,
-      {
-        key: `${conversationsItems.length}`,
-        label: `New Conversation ${conversationsItems.length}`
-      }
-    ])
-    setActiveKey(`${conversationsItems.length}`)
-  }
-  const onConversationClick = key => {
-    setActiveKey(key)
-  }
-  const handleFileChange = info => setAttachedFiles(info.fileList)
+        const data = await response.json()
 
-  // ==================== Nodes ====================
-  const placeholderNode = (
-    <Space direction="vertical" size={16} className={styles.placeholder}>
-      <Welcome
-        variant="borderless"
-        icon="https://avatars.githubusercontent.com/u/45651553?s=48&v=4"
-        title="Hello, I'm Hyper-RAG"
-        description="Base on Knowledge Hypergraph, AGI product interface solution, create a better intelligent vision~"
-        extra={
-          <Space>
-            <Button icon={<ShareAltOutlined />} />
-            <Button icon={<EllipsisOutlined />} />
-          </Space>
+        if (data.success) {
+        const modeNames = {
+          'hyper': 'Hyper',
+            'hyper-lite': 'Hyper-Lite',
+            'naive': 'Naive'
         }
-      />
-      <Prompts
-        title="Do you want?"
-        items={placeholderPromptsItems}
-        styles={{
-          list: {
-            width: '100%'
-          },
-          item: {
-            flex: 1
-          }
-        }}
-        onItemClick={onPromptsItemClick}
-      />
-    </Space>
-  )
-  const items = messages.map(({ id, message, status }) => ({
-    key: id,
-    loading: status === 'loading',
-    role: status === 'local' ? 'local' : 'ai',
-    content: message
-  }))
-  const attachmentsNode = (
-    <Badge dot={attachedFiles.length > 0 && !headerOpen}>
-      <Button type="text" icon={<PaperClipOutlined />} onClick={() => setHeaderOpen(!headerOpen)} />
-    </Badge>
-  )
-  const senderHeader = (
-    <Sender.Header
-      title="Attachments"
-      open={headerOpen}
-      onOpenChange={setHeaderOpen}
-      styles={{
-        content: {
-          padding: 0
-        }
-      }}
-    >
-      <Attachments
-        beforeUpload={() => false}
-        items={attachedFiles}
-        onChange={handleFileChange}
-        placeholder={type =>
-          type === 'drop'
-            ? {
-              title: 'Drop file here'
-            }
-            : {
-              icon: <CloudUploadOutlined />,
-              title: 'Upload files',
-              description: 'Click or drag files to this area to upload'
-            }
-        }
-      />
-    </Sender.Header>
-  )
-  const logoNode = (
-    <div className={styles.logo}>
-      <img
-        src="/logo.png"
-        draggable={false}
-        alt="logo"
-      />
-      <span>Hyper-RAG</span>
-    </div>
-  )
+            const modeName = modeNames[queryMode] || queryMode
+            const responseContent = `${data.response || 'No response content'}\n\n---\n*Mode: ${modeName}*`
 
-  // ==================== Render =================
-  return (
-    <div>
-      <div className={styles.topMenu}>
-        <div style={{ fontWeight: 700 }}>知识库选择</div>
-        <div style={{ display: 'flex', gap: 8, flex: 1, marginLeft: 20, alignItems: 'center' }}>
-          <DatabaseSelector
-            mode="buttons"
-            showRefresh={true}
-            size="small"
-            style={{ flex: 1 }}
-          />
-        </div>
-      </div>
-      <div className={styles.layout}>
-        <div className={styles.menu}>
-          {/* 🌟 Logo */}
-          {logoNode}
-          {/* 🌟 添加会话 */}
-          <Button
-            onClick={onAddConversation}
-            type="link"
-            className={styles.addBtn}
-            icon={<PlusOutlined />}
-          >
-            New Conversation
-          </Button>
-          {/* 🌟 会话管理 */}
-          <Conversations
-            items={conversationsItems}
-            className={styles.conversations}
-            activeKey={activeKey}
-            onActiveChange={onConversationClick}
-          />
-        </div>
-        <div className={styles.chat}>
-          {/* 🌟 消息列表 */}
-          <Bubble.List
-            items={
-              items.length > 0
-                ? items
-                : [
-                  {
-                    content: placeholderNode,
-                    variant: 'borderless'
-                  }
-                ]
-            }
-            roles={roles}
-            className={styles.messages}
-          />
-          {/* 🌟 提示词 */}
-          <Prompts items={senderPromptsItems} onItemClick={onPromptsItemClick} />
-          {/* 🌟 输入框 */}
-          <Sender
-            value={content}
-            header={senderHeader}
-            onSubmit={onSubmit}
-            onChange={setContent}
-            prefix={attachmentsNode}
-            loading={agent.isRequesting()}
-            className={styles.sender}
-          />
+            updateLastMessage(responseContent)
+      } else {
+            throw new Error(data.message || 'Query failed')
+        }
+    } catch (error) {
+        console.error('Error sending message:', error)
+        updateLastMessage(`Sorry, an error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsLoading(false)
+    }
+    }
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            handleSubmit()
+        }
+    }
+
+    // Effects
+    useEffect(() => {
+        storeGlobalUser.restoreSelectedDatabase()
+        storeGlobalUser.loadDatabases()
+        loadFromStorage()
+    }, [])
+
+    useEffect(() => {
+        if (conversations.length > 0) {
+            saveToStorage()
+        }
+    }, [conversations, activeConversationId])
+
+    return (
+        <div className="flex bg-gray-50">
+            {/* Sidebar */}
+            <div className="w-52 bg-gray-100 border-r border-gray-200 flex flex-col">
+                <div className="flex items-center space-x-4 m-4">
+                    <Settings className="size-10 text-gray-500" />
+                    <span className="font-medium text-gray-700">Mode:</span>
+                    <Select value={queryMode} onValueChange={setQueryMode}>
+                        <SelectTrigger className="w-40">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="hyper">Hyper</SelectItem>
+                            <SelectItem value="hyper-lite">Hyper-Lite</SelectItem>
+                            <SelectItem value="naive">Naive</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {/* Header */}
+                <div className="p-4 border-b border-gray-200">
+
+                    <Button
+                        onClick={createNewConversation}
+                        className="w-full"
+                        variant="outline"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Conversation
+                    </Button>
+                </div>
+
+                {/* Conversations List */}
+                <ScrollArea className="flex-1 p-2">
+                    <div className="space-y-2">
+                        {conversations.map((conv) => (
+                            <div
+                                key={conv.id}
+                                className={`group p-1 rounded-lg cursor-pointer transition-colors ${activeConversationId === conv.id
+                                    ? 'bg-blue-50 border border-blue-200'
+                                    : 'hover:bg-gray-50'
+                                    }`}
+                                onClick={() => setActiveConversationId(conv.id)}
+              >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                        <MessageCircle className="w-4 h-4 text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-900 truncate">
+                                            {conv.title}
+                                        </span>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="opacity-0 group-hover:opacity-100 h-6 w-6"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            deleteConversation(conv.id)
+                                        }}
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                </div>
+
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+
+
+
+                {/* Controls */}
+                <div className="p-4 border-t border-gray-200 space-y-4">
+                    <Button
+                        variant="outline"
+                        onClick={clearAllChats}
+                        className="w-full"
+                    >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Clear All Chats
+                    </Button>
+                </div>
+
+            </div>
+
+
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+                {/* Top Bar */}
+                <div className="bg-white border-b border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                            <Database className="w-5 h-5 text-gray-500" />
+                            <span className="font-medium text-gray-700">Database:</span>
+                            <DatabaseSelector
+                                mode="buttons"
+                                showCurrent={true}
+                                showRefresh={true}
+                                placeholder=""
+                                style={{}}
+                                size="small"
+                                onChange={() => { }}
+                                disabled={false}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Chat Area */}
+                <div className="flex-1 flex flex-col">
+                    {/* Messages */}
+                    <ScrollArea className="p-4 pb-0 h-[calc(100vh-210px)] bg-white">
+                        {activeConversation?.messages.length === 0 ? (
+                            <div className="flex-1 flex items-center justify-center mt-20">
+                                <div className="text-center">
+                                    <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                        Welcome to Hyper-RAG
+                                    </h3>
+                                    <p className="text-gray-500 max-w-md">
+                                        Ask me anything about your knowledge base. I&apos;ll help you find the
+                                        information you need using advanced RAG technology.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 max-w-4xl mx-auto">
+                                {activeConversation?.messages.map((message) => (
+                                    <div key={message.id + message.content} className="flex space-x-4">
+                                        <Avatar>
+                                            {message.role === 'user' ? (
+                                                <AvatarFallback>
+                                                    <User className="w-5 h-5" />
+                                                </AvatarFallback>
+                                            ) : (
+                                                <AvatarFallback>
+                                                    <Bot className="w-5 h-5" />
+                                                </AvatarFallback>
+                                            )}
+                                        </Avatar>
+
+                                        <div className="flex-1 space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="font-medium text-gray-900">
+                                                    {message.role === 'user' ? 'You' : 'Hyper-RAG'}
+                                                </span>
+                                                <span className="text-xs text-gray-500">
+                                                    {new Date(message.timestamp).toLocaleTimeString()}
+                                                </span>
+                                            </div>
+
+                                            <div className={`rounded-lg p-4 ${message.role === 'user'
+                                                ? 'bg-blue-50 border border-blue-200'
+                                                : 'bg-gray-50 border border-gray-200'
+                                                }`}>
+                                                {message.role === 'assistant' ? (
+                                                    <div className="prose prose-sm max-w-none">
+                                                        <ReactMarkdown
+                                                            components={{
+                                                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                                                code: ({ children, className }) => (
+                                                                    <code className={`${className} bg-gray-100 px-1 rounded`}>
+                                                                        {children}
+                                                                    </code>
+                                                                ),
+                                                                pre: ({ children }) => (
+                                                                    <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                                                                        {children}
+                                                                    </pre>
+                                                                ),
+                                                            }}
+                                                        >
+                                                            {message.content}
+                                                        </ReactMarkdown>
+                                                    </div>
+                                                ) : (
+                                                        <p className="text-gray-900 whitespace-pre-wrap m-0">
+                                                        {message.content}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                </div>
+                        )}
+                    </ScrollArea>
+
+                    {/* Input Area */}
+                    <div className="border-t border-gray-200 bg-white p-2">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="flex space-x-4 items-center">
+                                <Textarea
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="Ask me anything about your knowledge base..."
+                                    className="flex-1 h-7 resize-none"
+                                    disabled={isLoading}
+                                />
+                                <Button 
+                                    onClick={handleSubmit}
+                                    disabled={!inputValue.trim() || isLoading}
+                                    size="lg"
+                                    className="px-6"
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Send className="w-4 h-4" />
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
         </div>
       </div>
     </div>
   )
 }
-export default observer(Independent)
+
+export default observer(HyperRAGHome) 

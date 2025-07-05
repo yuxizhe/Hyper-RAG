@@ -5,31 +5,43 @@ class DatabaseManager:
     """数据库管理器，支持多个数据库实例"""
     def __init__(self):
         self.databases = {}
-        self.default_database = "hypergraph_wukong.hgdb"
+        self.cache_dir = "hyperrag_cache"
         
     def get_database(self, database_name=None):
         """获取数据库实例"""
         if database_name is None:
-            database_name = self.default_database
+            return None
             
+        # 构建完整的数据库文件路径
+        database_path = os.path.join(self.cache_dir, database_name, "hypergraph_chunk_entity_relation.hgdb")
+        
         # 检查数据库文件是否存在
-        if not os.path.exists(database_name):
-            raise Exception(f"Database file '{database_name}' does not exist")
+        if not os.path.exists(database_path):
+            raise Exception(f"Database file '{database_path}' does not exist")
             
         # 如果数据库实例不存在，创建新实例
         if database_name not in self.databases:
-            self.databases[database_name] = HypergraphDB(storage_file=database_name)
+            self.databases[database_name] = HypergraphDB(storage_file=database_path)
             
         return self.databases[database_name]
     
     def list_databases(self):
-        """列出所有可用的数据库文件"""
+        """列出hyperrag_cache目录下所有可用的数据库文件"""
         databases = []
-        current_dir = os.path.dirname(os.path.abspath(__file__))
         
-        for file in os.listdir(current_dir):
-            if file.endswith('.hgdb'):
-                databases.append(file)
+        # 检查hyperrag_cache目录是否存在
+        if not os.path.exists(self.cache_dir):
+            return databases
+        
+        try:
+            for file in os.listdir(self.cache_dir):
+                file_path = os.path.join(self.cache_dir, file)
+               
+                if os.path.isdir(file_path):
+                    databases.append(file)
+        except OSError:
+            # 如果无法读取目录，返回空列表
+            pass
                 
         return databases
 

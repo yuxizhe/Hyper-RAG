@@ -6,7 +6,8 @@ import Files from '@/pages/Hyper/Files'
 import Graph from '@/pages/Hyper/Graph'
 import HyperDB from '@/pages/Hyper/DB'
 import Setting from '@/pages/Setting'
-import { HomeFilled, SmileFilled, FileAddOutlined, QuestionCircleOutlined, DeploymentUnitOutlined, DatabaseOutlined, SettingOutlined } from '@ant-design/icons'
+import APIPage from '@/pages/API'
+import { HomeFilled, SmileFilled, FileAddOutlined, QuestionCircleOutlined, DeploymentUnitOutlined, DatabaseOutlined, SettingOutlined, ApiOutlined } from '@ant-design/icons'
 import { Navigate } from 'react-router-dom'
 
 export const routers = [
@@ -35,13 +36,6 @@ export const routers = [
         element: <HyperDB />
       },
       {
-        path: '/Setting',
-        name: '系统设置',
-        icon: <SettingOutlined />,
-        // permissionObj: true,
-        element: <Setting />
-      },
-      {
         path: '/Hyper/qa',
         name: '检索问答',
         icon: <QuestionCircleOutlined />,
@@ -50,9 +44,22 @@ export const routers = [
       },
       {
         path: '/Hyper/files',
-        name: '文档上传',
+        name: '文档解析',
         icon: <FileAddOutlined />,
         element: <Files />,
+      },
+      {
+        path: '/API',
+        name: 'API 文档',
+        icon: <ApiOutlined />,
+        element: <APIPage />,
+      },
+      {
+        path: '/Setting',
+        name: '系统设置',
+        icon: <SettingOutlined />,
+        // permissionObj: true,
+        element: <Setting />
       },
     ]
   },
