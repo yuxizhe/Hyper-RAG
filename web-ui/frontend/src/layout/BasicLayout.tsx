@@ -11,6 +11,7 @@ import Settings from '@config/defaultSettings'
 import { observer } from 'mobx-react'
 import React from 'react'
 import { routers } from '@config/routes/routers'
+import { useTranslation } from 'react-i18next'
 
 export enum ComponTypeEnum {
   MENU,
@@ -21,6 +22,7 @@ export enum ComponTypeEnum {
 export const GlobalUserInfo = React.createContext<Partial<User.UserEntity>>({})
 
 const BasicLayout: React.FC = props => {
+  const { t } = useTranslation()
   const [pathname, setPathname] = useState(window.location.hash.replace('#', ''))
   const navigate = useNavigate()
   const location = useLocation()
@@ -43,8 +45,26 @@ const BasicLayout: React.FC = props => {
           hideInMenu: item?.hideInMenu
         }
       }
+
+      // 为菜单项添加国际化支持
+      let translatedName = item?.name
+      if (item?.path === '/Hyper/show') {
+        translatedName = t('menu.graph')
+      } else if (item?.path === '/Hyper/DB') {
+        translatedName = t('menu.database')
+      } else if (item?.path === '/Hyper/qa') {
+        translatedName = t('menu.home')
+      } else if (item?.path === '/Hyper/files') {
+        translatedName = t('menu.files')
+      } else if (item?.path === '/API') {
+        translatedName = t('menu.api')
+      } else if (item?.path === '/Setting') {
+        translatedName = t('menu.settings')
+      }
+
       return {
         ...item,
+        name: translatedName,
         hideInMenu: item?.hideInMenu
       }
     }) as any
@@ -71,7 +91,7 @@ const BasicLayout: React.FC = props => {
             // navigate('login', { replace: true })
           }}
         >
-          退出登录
+          {t('common.logout')}
         </div>
       )
     }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // 服务器URL配置
 import { SERVER_URL } from '../../../utils/index'
 
 const DocumentManager = () => {
+  const { t } = useTranslation();
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [isDragging, setIsDragging] = useState(false);
@@ -124,7 +126,7 @@ const DocumentManager = () => {
         setEmbeddingProgress({});
         setProgressDetails({});
         setSelectedFiles(new Set());
-        showNotification('所有文档嵌入完成', 'success');
+        showNotification(t('files.all_completed'), 'success');
         fetchFiles(); // 刷新文件列表
         break;
 
@@ -162,7 +164,7 @@ const DocumentManager = () => {
       const data = await response.json();
       setFiles(data.files || []);
     } catch (error) {
-      showNotification('获取文件列表失败', 'error');
+      showNotification(t('files.fetch_files_failed'), 'error');
     }
   };
 
@@ -216,16 +218,16 @@ const DocumentManager = () => {
         const errorCount = data.files.filter(f => f.status === 'error').length;
 
         if (successCount > 0) {
-          showNotification(`成功上传 ${successCount} 个文件`, 'success');
+          showNotification(t('files.upload_success', { count: successCount }), 'success');
           fetchFiles();
         }
 
         if (errorCount > 0) {
-          showNotification(`${errorCount} 个文件上传失败`, 'error');
+          showNotification(t('files.upload_failed', { count: errorCount }), 'error');
         }
       }
     } catch (error) {
-      showNotification('文件上传失败', 'error');
+      showNotification(t('files.upload_error'), 'error');
     } finally {
       setIsUploading(false);
     }
@@ -251,7 +253,7 @@ const DocumentManager = () => {
 
   const handleEmbedDocuments = async () => {
     if (selectedFiles.size === 0) {
-      showNotification('请先选择要嵌入的文档', 'warning');
+      showNotification(t('files.select_files_first'), 'warning');
       return;
     }
 
@@ -277,15 +279,15 @@ const DocumentManager = () => {
       const data = await response.json();
 
       if (data.processing) {
-        showNotification(`开始处理 ${data.total_files} 个文档`, 'info');
+        showNotification(t('files.start_processing', { count: data.total_files }), 'info');
         // 嵌入状态和进度将通过WebSocket更新
       } else {
         setIsEmbedding(false);
-        showNotification('处理失败', 'error');
+        showNotification(t('files.processing_failed'), 'error');
       }
     } catch (error) {
       setIsEmbedding(false);
-      showNotification('文档嵌入失败', 'error');
+      showNotification(t('files.embedding_failed'), 'error');
     }
   };
 
@@ -296,7 +298,7 @@ const DocumentManager = () => {
       });
 
       if (response.ok) {
-        showNotification('文件删除成功', 'success');
+        showNotification(t('files.delete_success'), 'success');
         fetchFiles();
         setSelectedFiles(prev => {
           const newSet = new Set(prev);
@@ -305,7 +307,7 @@ const DocumentManager = () => {
         });
       }
     } catch (error) {
-      showNotification('文件删除失败', 'error');
+      showNotification(t('files.delete_failed'), 'error');
     }
   };
 
@@ -338,7 +340,7 @@ const DocumentManager = () => {
 
         {/* 文件上传区域 */}
         <div className="bg-white rounded-xl p-6 mb-8">
-          <div className="text-2xl font-semibold text-gray-900 mb-4">上传文档</div>
+          <div className="text-2xl font-semibold text-gray-900 mb-4">{t('files.upload_document')}</div>
 
           <div
             className={`border-3 border-dashed rounded-xl p-2 text-center transition-all duration-300 ${isDragging
@@ -360,16 +362,16 @@ const DocumentManager = () => {
             />
 
             <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              {isDragging ? '释放文件以上传' : '点击或拖拽文件到此处'}
+              {isDragging ? t('files.release_files') : t('files.drag_drop_files')}
             </h3>
             <p className="text-gray-500 mb-4">
-              支持 TXT、PDF、DOCX、MD 等格式
+              {t('files.supported_formats')}
             </p>
 
             {isUploading && (
               <div className="flex items-center justify-center space-x-2">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="text-blue-600">上传中...</span>
+                <span className="text-blue-600">{t('files.uploading')}</span>
               </div>
             )}
           </div>
@@ -378,13 +380,13 @@ const DocumentManager = () => {
         {/* 文件列表和操作区域 */}
         <div className="bg-white rounded-xl p-6">
           <div className="flex justify-between items-center mb-6">
-            <div className="text-2xl font-semibold text-gray-900">文档列表</div>
+            <div className="text-2xl font-semibold text-gray-900">{t('files.document_list')}</div>
             <div className="flex space-x-3">
               <button
                 onClick={handleSelectAll}
                 className="px-4 py-2 text-sm border-0 font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                {selectedFiles.size === files.length ? '取消全选' : '全选'}
+                {selectedFiles.size === files.length ? t('files.deselect_all') : t('files.select_all')}
               </button>
               <button
                 onClick={handleEmbedDocuments}
@@ -397,10 +399,10 @@ const DocumentManager = () => {
                 {isEmbedding ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>处理中...</span>
+                    <span>{t('files.processing')}</span>
                   </div>
                 ) : (
-                  `嵌入选中文档 (${selectedFiles.size})`
+                    `${t('files.embed_documents')} (${selectedFiles.size})`
                 )}
               </button>
               {isEmbedding && (
@@ -409,11 +411,11 @@ const DocumentManager = () => {
                     setIsEmbedding(false);
                     setEmbeddingProgress({});
                     setProgressDetails({});
-                    showNotification('处理已取消', 'warning');
+                    showNotification(t('files.processing_cancelled'), 'warning');
                   }}
                   className="border-0 px-4 py-2 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                 >
-                  取消处理
+                  {t('files.cancel_processing')}
                 </button>
               )}
             </div>
@@ -422,20 +424,20 @@ const DocumentManager = () => {
           {files.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-4xl text-gray-300 mb-4">📄</div>
-              <p className="text-gray-500">暂无文档，请先上传文档</p>
+              <p className="text-gray-500">{t('files.no_documents')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">选择</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">文件名</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">数据库</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">大小</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">上传时间</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">状态</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">操作</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.select')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.filename')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.database')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.size')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.upload_time')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.status')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('files.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -456,7 +458,7 @@ const DocumentManager = () => {
                       </td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                          {file.database_name || 'default'}
+                          {file.database_name || t('files.default_db')}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{formatFileSize(file.file_size)}</td>
@@ -466,8 +468,8 @@ const DocumentManager = () => {
                           file.status === 'embedded' ? 'bg-blue-100 text-blue-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                          {file.status === 'uploaded' ? '已上传' :
-                            file.status === 'embedded' ? '已嵌入' : file.status}
+                          {file.status === 'uploaded' ? t('files.uploaded') :
+                            file.status === 'embedded' ? t('files.embedded') : file.status}
                         </span>
                       </td>
                       <td className="py-3 px-4">
@@ -475,7 +477,7 @@ const DocumentManager = () => {
                           onClick={() => handleDeleteFile(file.file_id)}
                           className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors"
                         >
-                          删除
+                          {t('files.delete')}
                         </button>
                       </td>
                     </tr>
@@ -489,13 +491,13 @@ const DocumentManager = () => {
         {/* 进度显示面板 */}
         {null && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">文档处理进度</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('files.processing_progress')}</h3>
 
             {/* 总体进度条 */}
             {embeddingProgress.total && (
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">总体进度</span>
+                  <span className="text-sm font-medium text-gray-700">{t('files.overall_progress')}</span>
                   <span className="text-sm text-gray-500">
                     {embeddingProgress.current || 0}/{embeddingProgress.total}
                   </span>
@@ -553,19 +555,19 @@ const DocumentManager = () => {
         {(isEmbedding || showLogs) && logs.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">处理日志</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('files.processing_logs')}</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setLogs([])}
                   className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  清空日志
+                  {t('files.clear_logs')}
                 </button>
                 <button
                   onClick={() => setShowLogs(!showLogs)}
                   className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  {showLogs ? '隐藏日志' : '显示日志'}
+                  {showLogs ? t('files.hide_logs') : t('files.show_logs')}
                 </button>
               </div>
             </div>
@@ -586,10 +588,10 @@ const DocumentManager = () => {
         {/* 嵌入配置面板 */}
         {selectedFiles.size > 0 && !isEmbedding && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">嵌入设置</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('files.embedding_settings')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">分块大小</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('files.chunk_size')}</label>
                 <input
                   type="number"
                   defaultValue={1000}
@@ -597,7 +599,7 @@ const DocumentManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">重叠长度</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('files.overlap_length')}</label>
                 <input
                   type="number"
                   defaultValue={200}
