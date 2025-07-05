@@ -377,9 +377,9 @@ const HyperDB = () => {
         {
             title: '操作',
             key: 'action',
-            width: 200,
+            width: 100,
             render: (_, record) => (
-                <Space size="middle">
+                <Space size="small">
                     <Button
                         type="link"
                         icon={<EyeOutlined />}
@@ -415,7 +415,7 @@ const HyperDB = () => {
             title: 'Hyperedge',
             dataIndex: 'hyperedge_id',
             key: 'hyperedge_id',
-            width: 300,
+            width: 200,
             render: (text, record) => {
                 const vertices = text.split('|*|');
                 const tooltipContent = (
@@ -449,9 +449,9 @@ const HyperDB = () => {
         {
             title: '操作',
             key: 'action',
-            width: 250,
+            width: 100,
             render: (_, record) => (
-                <Space size="middle">
+                <Space size="small">
                     <Button
                         type="link"
                         icon={<EyeOutlined />}
@@ -531,10 +531,10 @@ const HyperDB = () => {
 
             {/* 数据表格区域 */}
             {storeGlobalUser.selectedDatabase ? (
-                <>
+                <div className='flex  gap-4'>
                     {/* Vertices表格 */}
-                    <Card title="实体 (Vertices)" style={{ marginBottom: 24 }}>
-                        <div style={{ marginBottom: '16px' }}>
+                    <Card title="实体 (Vertices)" style={{ marginBottom: 24 }}
+                        extra={
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
@@ -542,19 +542,22 @@ const HyperDB = () => {
                             >
                                 添加 Vertex
                             </Button>
-                        </div>
+                        }
+                    >
+
                         <Table
                             columns={vertexColumns}
                             dataSource={verticesTableData}
                             loading={loading}
                             pagination={{ pageSize: 10 }}
-                            scroll={{ x: 600 }}
+                            scroll={{ x: 300 }}
                         />
                     </Card>
 
                     {/* Hyperedges表格 */}
-                    <Card title="超边 (Hyperedges)">
-                        <div style={{ marginBottom: '16px' }}>
+                    <Card title="超边 (Hyperedges)"
+                        className='flex-1'
+                        extra={
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
@@ -562,16 +565,17 @@ const HyperDB = () => {
                             >
                                 添加 Hyperedge
                             </Button>
-                        </div>
+                        }
+                    >
                         <Table
                             columns={hyperedgeColumns}
                             dataSource={hyperedgesTableData}
                             loading={loading}
                             pagination={{ pageSize: 10 }}
-                            scroll={{ x: 600 }}
+                            scroll={{ x: 400 }}
                         />
                     </Card>
-                </>
+                </div>
             ) : (
                 <Card style={{ textAlign: 'center', padding: '60px 0' }}>
                     <DatabaseOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: 16 }} />
@@ -664,6 +668,7 @@ const HyperDB = () => {
                                             width="100%"
                                             showTooltip={true}
                                             graphId={`vertex-graph-${selectedRecord}`}
+                                            database={storeGlobalUser.selectedDatabase}
                                         />
                                     </div>
                                 </Card>

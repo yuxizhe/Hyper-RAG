@@ -1,86 +1,188 @@
-# Hyper-RAG Web UI
+# HyperRAG Web UI
 
-## 功能介绍
+HyperRAG Web UI 是一个基于 React + FastAPI 的全栈 Web 应用，为 HyperRAG 系统提供了完整的可视化界面和管理功能。
 
-### HyperDB 数据库管理页面
+## 📖 项目概述
 
-HyperDB页面提供了完整的超图数据库管理功能，包括：
+HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG 系统，包括超图可视化、文档管理、检索问答等功能。
 
-#### Vertices 管理
-- **查看所有vertices**：以表格形式展示所有顶点
-- **添加vertex**：创建新的顶点，包含实体名称、类型、描述和附加属性
-- **编辑vertex**：修改现有顶点的信息
-- **删除vertex**：删除指定的顶点（会同时删除相关的hyperedges）
-- **查看vertex详情**：查看顶点的完整信息
+## ✨ 主要功能
 
-#### Hyperedges 管理
-- **查看所有hyperedges**：以可视化标签形式展示所有超边
-- **添加hyperedge**：创建新的超边，连接多个顶点
-- **编辑hyperedge**：修改超边的关键词和摘要信息
-- **删除hyperedge**：删除指定的超边
+### 🔍 检索问答 (QA)
+- 智能对话界面，支持多种查询模式
+- 支持 `hyper`、`hyper-lite`、`naive` 三种查询模式
+- 实时流式回答，优秀的用户体验
+- 对话历史管理和持久化存储
 
-#### 数据统计
-- 显示当前数据库中vertices和hyperedges的总数
-- 实时更新统计信息
+### 📊 超图展示 (Graph)
+- 交互式超图可视化
+- 支持节点和超边的详细信息查看
+- 动态图形布局和缩放功能
+- 基于 AntV G6 的专业图形渲染
 
-## API 接口
+### 🗄️ HypergraphDB 管理 (DB)
+- 完整的超图数据库管理界面
+- 支持顶点 (Vertices) 和超边 (Hyperedges) 的 CRUD 操作
+- 数据库切换和状态管理
+- 邻居节点查询和关系分析
 
-### Vertices 接口
-- `GET /db/vertices` - 获取所有vertices列表
-- `GET /db/vertices/{vertex_id}` - 获取指定vertex的详细信息
-- `POST /db/vertices` - 创建新的vertex
-- `PUT /db/vertices/{vertex_id}` - 更新vertex信息
-- `DELETE /db/vertices/{vertex_id}` - 删除vertex
+### 📁 文档解析 (Files)
+- 拖拽式文件上传界面
+- 支持多种文档格式 (PDF, DOCX, TXT, Markdown)
+- 实时文档嵌入进度显示
+- WebSocket 实时日志监控
+- 批量文档处理和管理
 
-### Hyperedges 接口
-- `GET /db/hyperedges` - 获取所有hyperedges列表
-- `POST /db/hyperedges` - 创建新的hyperedge
-- `PUT /db/hyperedges/{hyperedge_id}` - 更新hyperedge信息
-- `DELETE /db/hyperedges/{hyperedge_id}` - 删除hyperedge
+### ⚙️ 系统设置 (Setting)
+- LLM 模型配置 (OpenAI, 其他兼容API)
+- 嵌入模型设置和参数调整
+- 数据库连接管理
+- API 连接测试工具
 
-## 启动说明
+### 📚 API 文档 (API)
+- 内置 FastAPI 自动生成的 API 文档
+- 交互式 API 测试界面
+- 完整的接口说明和示例
 
-### 后端启动
+## 🛠️ 技术栈
+
+### 前端技术
+- **React 18** - 主要框架
+- **Ant Design & Ant Design Pro** - UI 组件库
+- **Radix UI** - 现代化 UI 组件
+- **AntV G6** - 图形可视化
+- **React Router** - 路由管理
+- **MobX** - 状态管理
+- **Tailwind CSS** - 样式框架
+- **Vite** - 构建工具
+
+### 后端技术
+- **FastAPI** - 现代 Python Web 框架
+- **Uvicorn** - ASGI 服务器
+- **Pydantic** - 数据验证
+- **SQLAlchemy** - ORM
+- **WebSocket** - 实时通信
+- **OpenAI API** - LLM 集成
+
+## 🚀 快速开始
+
+### 环境要求
+- Node.js 16+ 
+- Python 3.8+
+- npm/yarn
+
+### 后端部署
+
+1. 进入后端目录：
 ```bash
 cd web-ui/backend
+```
+
+2. 安装依赖：
+```bash
 pip install -r requirements.txt
+```
+
+3. 启动开发服务器：
+```bash
 fastapi dev main.py
 ```
 
-### 前端启动
+4. 生产环境部署：
 ```bash
-cd web-ui/frontend
-npm install
-npm run dev
+# 后台运行
+nohup fastapi run main.py > server.log 2>&1 &
+
+# 或使用 uvicorn
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-## 使用说明
+后端服务将在 `http://127.0.0.1:8000` 启动
 
-1. **访问页面**：启动前后端服务后，访问 `http://localhost:5173/Hyper/DB`
+### 前端部署
 
-2. **管理Vertices**：
-   - 点击"添加Vertex"按钮创建新顶点
-   - 填写必要的信息：Vertex ID（唯一标识）、实体名称、类型、描述等
-   - 使用操作按钮进行查看、编辑、删除操作
+1. 进入前端目录：
+```bash
+cd web-ui/frontend
+```
 
-3. **管理Hyperedges**：
-   - 点击"添加Hyperedge"按钮创建新超边
-   - 输入要连接的vertices（用逗号分隔）
-   - 添加关键词和摘要信息
+2. 安装依赖：
+```bash
+npm install
+# 或
+yarn install
+```
 
-4. **数据格式说明**：
-   - 描述和附加属性支持多个值，使用`<SEP>`分隔
-   - Vertices在hyperedge中用逗号分隔输入
+3. 启动开发服务器：
+```bash
+npm run dev
+# 或
+yarn dev
+```
 
-## 注意事项
+4. 构建生产版本：
+```bash
+npm run build
+# 或
+yarn build
+```
 
-- 删除vertex时会同时删除所有包含该vertex的hyperedges
-- Vertex ID必须唯一，不能重复
-- 创建hyperedge时，所有相关的vertices必须已存在
-- 数据会自动保存到`.hgdb`文件中
+前端应用将在 `http://localhost:5173` 启动
 
-## 技术栈
+## 📱 界面预览
 
-- **前端**：React + Ant Design + Vite
-- **后端**：FastAPI + HypergraphDB
-- **数据库**：自定义超图数据库存储格式
+### 主要页面
+- **首页**: 智能对话界面，支持多轮问答
+- **超图展示**: 交互式超图可视化展示
+- **数据库管理**: 完整的超图数据 CRUD 操作
+- **文档管理**: 文件上传和嵌入进度监控
+- **系统设置**: 模型配置和连接管理
+
+## 🔧 配置说明
+
+### 后端配置
+- **LLM 配置**: 支持 OpenAI 和其他兼容 API
+- **嵌入模型**: 支持多种嵌入模型配置
+- **数据库**: 支持多数据库切换
+- **缓存**: 自动缓存管理
+
+### 前端配置
+- **API 地址**: 自动检测后端服务地址
+- **主题**: 支持亮色/暗色主题
+- **布局**: 响应式设计，适配多种屏幕
+
+## 🔗 API 文档
+
+访问 `http://127.0.0.1:8000/docs` 查看完整的 API 文档，包括：
+
+### 核心 API
+- `GET /db` - 获取超图数据
+- `POST /hyperrag/query` - 智能问答查询
+- `POST /hyperrag/insert` - 文档插入
+- `POST /files/upload` - 文件上传
+- `POST /files/embed` - 文档嵌入
+
+### 管理 API
+- `GET /settings` - 获取系统设置
+- `POST /settings` - 保存系统设置
+- `GET /databases` - 获取数据库列表
+- `POST /test-api` - 测试 API 连接
+
+## 📊 实时监控
+
+### WebSocket 支持
+- 实时日志监控
+- 文档处理进度
+- 系统状态更新
+
+### 进度追踪
+- 文件上传进度
+- 嵌入处理进度
+- 错误状态提醒
+
+## 🔒 安全特性
+
+- CORS 跨域配置
+- 文件类型验证
+- 错误处理和日志记录
+- 连接状态监控

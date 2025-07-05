@@ -110,8 +110,8 @@ const Setting = () => {
             console.error('加载数据库列表失败:', error);
             // 如果API不存在，提供一些默认选项
             setAvailableDatabases([
-                { name: 'hypergraph_wukong.hgdb', description: '西游记知识图谱' },
-                { name: 'hypergraph_A_Christmas_Carol.hgdb', description: '圣诞颂歌知识图谱' }
+                { name: 'hypergraph_wukong', description: '西游记超图' },
+                { name: 'hypergraph_A_Christmas_Carol', description: '圣诞颂歌超图' }
             ]);
         }
     };
@@ -239,13 +239,13 @@ const Setting = () => {
     }, []);
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className='m-2'>
             <Card>
-                <div style={{ marginBottom: '24px' }}>
-                    <Title level={2}>
+                <div className='mb-4'>
+                    <div className='flex items-center text-2xl font-bold'>
                         <SettingOutlined style={{ marginRight: '8px' }} />
                         系统设置
-                    </Title>
+                    </div>
                     <Text type="secondary">配置API密钥、模型参数和数据库连接</Text>
                 </div>
 
@@ -386,7 +386,7 @@ const Setting = () => {
                         >
                             <Alert
                                 message="数据库配置说明"
-                                description="选择要使用的知识图谱数据库。不同数据库包含不同领域的知识内容。"
+                                description="选择要使用的超图数据库。不同数据库包含不同领域的知识内容。"
                                 type="info"
                                 showIcon
                                 style={{ marginBottom: '24px' }}

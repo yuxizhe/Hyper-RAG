@@ -115,9 +115,9 @@ const BasicLayout: React.FC = props => {
           ErrorBoundary={false}
           {...Settings}
         >
-          <PageContainer>
-            <Outlet />
-          </PageContainer>
+          {/* <PageContainer> */}
+          <Outlet />
+          {/* </PageContainer> */}
         </ProLayout>
       ) : (
         <Outlet />

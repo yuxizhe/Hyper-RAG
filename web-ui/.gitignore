@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 pnpm-lock.yaml
 __pycache__
+
+frontend/.env.*
+backend/file_metadata.json
+local

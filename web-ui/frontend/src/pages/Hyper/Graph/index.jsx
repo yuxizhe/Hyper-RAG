@@ -148,7 +148,8 @@ const GraphPage = () => {
 
   return (
     <>
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className='m-4' style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span>超图数据库：</span>
         <DatabaseSelector
           mode="compact"
           showRefresh={false}
@@ -156,7 +157,7 @@ const GraphPage = () => {
           onChange={onDatabaseChange}
         />
 
-        <span>选择实体：</span>
+        <span className='ml-4'>选择实体：</span>
         <Select
           onChange={setKey}
           style={{ width: 300 }}

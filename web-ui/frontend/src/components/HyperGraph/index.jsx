@@ -94,9 +94,9 @@ const HyperGraph = ({
                 nodeR0: 15,
                 nodeR1: 50,
                 morphBuffer: 10,
-                threshold: 1,
+                threshold: 4,
                 memberInfluenceFactor: 1,
-                edgeInfluenceFactor: 1,
+                edgeInfluenceFactor: 4,
                 nonMemberInfluenceFactor: -0.8,
                 virtualEdges: true,
             });
@@ -145,8 +145,8 @@ const HyperGraph = ({
                 palette: { field: 'cluster' },
                 style: {
                     labelText: d => d.id,
-                    fill: d => d.id === vertexId ? '#ff4d4f' : undefined, // 高亮当前查看的顶点
-                    stroke: d => d.id === vertexId ? '#ff4d4f' : undefined,
+                    // fill: d => d.id === vertexId ? '#ff4d4f' : undefined, // 高亮当前查看的顶点
+                    // stroke: d => d.id === vertexId ? '#ff4d4f' : undefined,
                 }
             },
             animate: false,
@@ -203,6 +203,13 @@ const HyperGraph = ({
                 options={options}
                 id={graphId}
                 style={{ width: '100%', height: '100%' }}
+                error={() => {
+                    return <div>
+                        <div>
+
+                        </div>
+                    </div>
+                }}
             />
         </div>
     );

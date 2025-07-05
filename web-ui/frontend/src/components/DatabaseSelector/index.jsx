@@ -118,7 +118,7 @@ const DatabaseSelector = ({
 
     // 按钮组模式
     const renderButtonsMode = () => (
-        <Space wrap size="small" style={style}>
+        <Space size="small" style={style}>
             {storeGlobalUser.availableDatabases.map((db) => (
                 <Button
                     key={db.name}
@@ -131,8 +131,9 @@ const DatabaseSelector = ({
                     style={{
                         borderColor: storeGlobalUser.selectedDatabase === db.name ? '#1890ff' : undefined
                     }}
+                    className='py-6 px-4'
                 >
-                    {db.description}
+                    {db.description.replace('超图', '')}
                 </Button>
             ))}
             {showRefresh && (
@@ -150,7 +151,6 @@ const DatabaseSelector = ({
     // 紧凑模式
     const renderCompactMode = () => (
         <Space size="small" style={style}>
-            <DatabaseOutlined style={{ color: '#1890ff' }} />
             <Select
                 value={storeGlobalUser.selectedDatabase}
                 onChange={handleDatabaseChange}
@@ -162,6 +162,7 @@ const DatabaseSelector = ({
             >
                 {storeGlobalUser.availableDatabases.map((db) => (
                     <Option key={db.name} value={db.name} title={db.description}>
+                        <DatabaseOutlined style={{ marginRight: 6, color: '#1890ff' }} />
                         {db.description}
                     </Option>
                 ))}
