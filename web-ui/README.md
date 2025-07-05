@@ -13,18 +13,22 @@ HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG �
 - 支持 `hyper`、`hyper-lite`、`naive` 三种查询模式
 - 实时流式回答，优秀的用户体验
 - 对话历史管理和持久化存储
+![chat](./assets/chat.png)
 
 ### 📊 超图展示 (Graph)
 - 交互式超图可视化
 - 支持节点和超边的详细信息查看
 - 动态图形布局和缩放功能
 - 基于 AntV G6 的专业图形渲染
+![graph](./assets/graph.png)
 
 ### 🗄️ HypergraphDB 管理 (DB)
 - 完整的超图数据库管理界面
 - 支持顶点 (Vertices) 和超边 (Hyperedges) 的 CRUD 操作
 - 数据库切换和状态管理
 - 邻居节点查询和关系分析
+![db1](./assets/db1.png)
+![db2](./assets/db2.png)
 
 ### 📁 文档解析 (Files)
 - 拖拽式文件上传界面
@@ -32,17 +36,20 @@ HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG �
 - 实时文档嵌入进度显示
 - WebSocket 实时日志监控
 - 批量文档处理和管理
+![file](./assets/file.png)
 
 ### ⚙️ 系统设置 (Setting)
 - LLM 模型配置 (OpenAI, 其他兼容API)
 - 嵌入模型设置和参数调整
 - 数据库连接管理
 - API 连接测试工具
+![setting](./assets/setting.png)
 
 ### 📚 API 文档 (API)
 - 内置 FastAPI 自动生成的 API 文档
 - 交互式 API 测试界面
 - 完整的接口说明和示例
+![api](./assets/api.png)
 
 ## 🛠️ 技术栈
 
