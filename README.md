@@ -151,9 +151,9 @@ You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the H
 ### Hypergraph Visualization
 We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Web-UI](./web-ui/README.md).
 
-*Note: The web UI is still under development and may not be fully functional. We welcome any contributions to improve it.*
-![vis-qa](./assets/vis-QA.jpg)
-![vis-hg](./assets/vis-hg.jpg)
+*Note: We welcome any contributions to improve it.*
+![vis-qa](./web-ui/assets/chat_e.png)
+![vis-hg](./web-ui/assets/graph_e.png)
 
 
 
