@@ -62,34 +62,69 @@ def get_hypergraph(database=None):
 
     return get_all_detail(all_v, all_e, database)
 
-def get_vertices(database=None):
+def get_vertices(database=None, page=None, page_size=None):
     """
     获取vertices列表
     """
     db = db_manager.get_database(database)
-    all_v = db.all_v
-    return all_v
+    all_v = list(db.all_v)  # 强制转为 list
+    
+    # 如果没有分页参数，返回所有数据
+    if page is None or page_size is None:
+        return all_v
+    
+    # 计算分页
+    total = len(all_v)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    
+    # 获取分页数据
+    page_data = all_v[start_idx:end_idx]
+    
+    return {
+        'data': page_data,
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size
+    }
 
-def getFrequentVertices(database=None):
+def getFrequentVertices(database=None, page=None, page_size=None):
     """
-    获取频繁的vertices列表
+    获取有边的vertices列表，支持分页
     """
     db = db_manager.get_database(database)
-    all_v = db.all_v
+    
+    # 从 all_e 中取出出现两次以上的vertices
+    frequent_vertices = {}
+    for e in db.all_e:
+        for v in e:
+            if v in frequent_vertices:
+                frequent_vertices[v] += 1
+            else:
+                frequent_vertices[v] = 1
+    
+    frequent_vertices = [v for v, count in frequent_vertices.items() if count >= 2]
 
-    frequent_vertices = []
+    # 如果没有分页参数，返回所有数据
+    if page is None or page_size is None:
+        return frequent_vertices
 
-    # 直接使用db.all_e而不是调用get_hyperedges()
-    all_e = db.all_e
-    for v in all_v:
-        count = 0
-        for e in all_e:
-            if v in e:
-                count += 1
-        if count >= 2:
-            frequent_vertices.append(v)
+    # 计算分页
+    total = len(frequent_vertices)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
 
-    return frequent_vertices
+    # 获取分页数据
+    page_data = frequent_vertices[start_idx:end_idx]
+
+    return {
+        'data': page_data,
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size
+    }
 
 def get_vertice(vertex_id: str, database=None):
     """
@@ -99,12 +134,12 @@ def get_vertice(vertex_id: str, database=None):
     vertex = db.v(vertex_id)
     return vertex
 
-def get_hyperedges(database=None):
+def get_hyperedges(database=None, page=None, page_size=None):
     """
     获取hyperedges列表（包含详细信息）
     """
     db = db_manager.get_database(database)
-    all_e = db.all_e
+    all_e = list(db.all_e)  # 强制转为 list
 
     hyperedges = []
     for e in all_e:
@@ -121,7 +156,25 @@ def get_hyperedges(database=None):
         }
         hyperedges.append(edge_info)
 
-    return hyperedges
+    # 如果没有分页参数，返回所有数据
+    if page is None or page_size is None:
+        return hyperedges
+    
+    # 计算分页
+    total = len(hyperedges)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    
+    # 获取分页数据
+    page_data = hyperedges[start_idx:end_idx]
+    
+    return {
+        'data': page_data,
+        'total': total,
+        'page': page,
+        'page_size': page_size,
+        'total_pages': (total + page_size - 1) // page_size
+    }
 
 def get_hyperedge(hyperedge_id: str, database=None):
     """

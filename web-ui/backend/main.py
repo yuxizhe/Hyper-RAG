@@ -55,23 +55,23 @@ async def db(database: str = None):
         return {"error": str(e)}
 
 @app.get("/db/vertices")
-async def get_vertices_function(database: str = None):
+async def get_vertices_function(database: str = None, page: int = None, page_size: int = None):
     """
     获取vertices列表
     """
     try:
-        data = getFrequentVertices(database)
+        data = getFrequentVertices(database, page, page_size)
         return data
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/db/hyperedges")
-async def get_hypergraph_function(database: str = None):
+async def get_hypergraph_function(database: str = None, page: int = None, page_size: int = None):
     """
     获取hyperedges列表
     """
     try:
-        data = get_hyperedges(database)
+        data = get_hyperedges(database, page, page_size)
         return data
     except Exception as e:
         return {"error": str(e)}
