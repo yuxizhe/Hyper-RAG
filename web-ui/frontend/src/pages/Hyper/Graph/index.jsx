@@ -20,12 +20,30 @@ const GraphPage = () => {
     descriptions: [''],
     properties: ['']
   });
+  const [verticesList, setVerticesList] = useState([]);
+  const [verticesPage, setVerticesPage] = useState(1);
+  const [verticesTotal, setVerticesTotal] = useState(0);
+  const [verticesLoading, setVerticesLoading] = useState(false);
 
   // 初始化数据库
   useEffect(() => {
     storeGlobalUser.restoreSelectedDatabase();
     storeGlobalUser.loadDatabases();
   }, []);
+
+  // 获取vertices分页加载
+  const loadVertices = async (page = 1, append = false) => {
+    setVerticesLoading(true);
+    const pageSize = 50;
+    const url = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(storeGlobalUser.selectedDatabase)}&page=${page}&page_size=${pageSize}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const list = data.data || data;
+    setVerticesTotal(data.total || list.length);
+    setVerticesPage(page);
+    setVerticesList(prev => append ? [...prev, ...list] : list);
+    setVerticesLoading(false);
+  };
 
   // 获取vertices列表
   useEffect(() => {
@@ -36,10 +54,12 @@ const GraphPage = () => {
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        setKeys(data);
+        // 处理分页数据格式
+        const vertices = data.data || data;
+        setKeys(vertices);
         // 设置默认选中第一个vertex
-        if (data && data.length > 0) {
-          setKey(data[0]);
+        if (vertices && vertices.length > 0) {
+          setKey(vertices[0]);
         }
         setLoading(false);
       })
@@ -48,6 +68,16 @@ const GraphPage = () => {
         setLoading(false);
       });
   }, [storeGlobalUser.selectedDatabase, t]);
+
+  // 初始化和数据库切换时加载第一页
+  useEffect(() => {
+    if (storeGlobalUser.selectedDatabase) {
+      setVerticesList([]);
+      setVerticesPage(1);
+      setVerticesTotal(0);
+      loadVertices(1, false);
+    }
+  }, [storeGlobalUser.selectedDatabase]);
 
   // 获取选中实体的详细信息（用于右侧详情展示）
   useEffect(() => {
@@ -161,13 +191,22 @@ const GraphPage = () => {
 
         <span className='ml-4'>{t('graph.select_entity')}</span>
         <Select
-          onChange={setKey}
-          style={{ width: 300 }}
           value={key}
+          style={{ width: 300 }}
           showSearch
+          loading={verticesLoading}
           placeholder={t('graph.select_entity_placeholder')}
+          onChange={setKey}
+          onPopupScroll={e => {
+            const target = e.target;
+            if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 10) {
+              if (verticesList.length < verticesTotal && !verticesLoading) {
+                loadVertices(verticesPage + 1, true);
+              }
+            }
+          }}
         >
-          {keys.map((vertexKey) => (
+          {verticesList.map(vertexKey => (
             <Select.Option key={vertexKey} value={vertexKey}>
               {vertexKey}
             </Select.Option>
@@ -177,11 +216,11 @@ const GraphPage = () => {
 
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
         {/* 使用HyperGraph组件展示超图 */}
-        <div style={{ width: '70%', height: '600px' }}>
+        <div style={{ width: '70%' }}>
           <HyperGraph
             vertexId={key}
             database={storeGlobalUser.selectedDatabase}
-            height="600px"
+            height="calc(100vh - 100px)"
             width="100%"
             showTooltip={true}
             graphId="graph-page-hypergraph"

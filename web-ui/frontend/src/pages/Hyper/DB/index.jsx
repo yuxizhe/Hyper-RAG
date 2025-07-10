@@ -60,6 +60,18 @@ const HyperDB = () => {
     const [vertexForm] = Form.useForm();
     const [hyperedgeForm] = Form.useForm();
 
+    // 分页相关状态
+    const [verticesPagination, setVerticesPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0
+    });
+    const [hyperedgesPagination, setHyperedgesPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0
+    });
+
     // 初始化数据库
     useEffect(() => {
         storeGlobalUser.restoreSelectedDatabase();
@@ -67,14 +79,19 @@ const HyperDB = () => {
     }, []);
 
     // 获取数据
-    const fetchData = async (database = storeGlobalUser.selectedDatabase) => {
+    const fetchData = async (database = storeGlobalUser.selectedDatabase, resetPagination = false) => {
         if (!database) return;
 
         setLoading(true);
         console.log('Fetching data from:', SERVER_URL, 'Database:', database);
+
+        // 如果需要重置分页，则重置到第一页
+        const currentVerticesPage = resetPagination ? 1 : verticesPagination.current;
+        const currentHyperedgesPage = resetPagination ? 1 : hyperedgesPagination.current;
+
         try {
-            const verticesUrl = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(database)}`;
-            const hyperedgesUrl = `${SERVER_URL}/db/hyperedges?database=${encodeURIComponent(database)}`;
+            const verticesUrl = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(database)}&page=${currentVerticesPage}&page_size=${verticesPagination.pageSize}`;
+            const hyperedgesUrl = `${SERVER_URL}/db/hyperedges?database=${encodeURIComponent(database)}&page=${currentHyperedgesPage}&page_size=${hyperedgesPagination.pageSize}`;
 
             console.log('Making requests to:');
             console.log('- Vertices:', verticesUrl);
@@ -103,8 +120,43 @@ const HyperDB = () => {
             console.log('- Vertices:', verticesData);
             console.log('- Hyperedges:', hyperedgesData);
 
-            setVertices(verticesData);
-            setHyperedges(hyperedgesData);
+            // 处理vertices数据
+            if (verticesData.data) {
+                // 分页数据
+                setVertices(verticesData.data);
+                setVerticesPagination({
+                    current: verticesData.page,
+                    pageSize: verticesData.page_size,
+                    total: verticesData.total
+                });
+            } else {
+                // 旧版本非分页数据
+                setVertices(verticesData);
+                setVerticesPagination({
+                    current: 1,
+                    pageSize: verticesData.length,
+                    total: verticesData.length
+                });
+            }
+
+            // 处理hyperedges数据
+            if (hyperedgesData.data) {
+                // 分页数据
+                setHyperedges(hyperedgesData.data);
+                setHyperedgesPagination({
+                    current: hyperedgesData.page,
+                    pageSize: hyperedgesData.page_size,
+                    total: hyperedgesData.total
+                });
+            } else {
+                // 旧版本非分页数据
+                setHyperedges(hyperedgesData);
+                setHyperedgesPagination({
+                    current: 1,
+                    pageSize: hyperedgesData.length,
+                    total: hyperedgesData.length
+                });
+            }
         } catch (error) {
             console.error('Fetch error:', error);
             message.error(t('database.fetch_data_failed') + '：' + error.message);
@@ -115,7 +167,7 @@ const HyperDB = () => {
     // 当数据库选择改变时，重新获取数据
     useEffect(() => {
         if (storeGlobalUser.selectedDatabase) {
-            fetchData(storeGlobalUser.selectedDatabase);
+            fetchData(storeGlobalUser.selectedDatabase, true);
         }
     }, [storeGlobalUser.selectedDatabase]);
 
@@ -181,7 +233,8 @@ const HyperDB = () => {
                 message.success(result.message);
                 setModalVisible(false);
                 form.resetFields();
-                fetchData();
+                // 保持当前分页状态，不重置分页
+                fetchData(storeGlobalUser.selectedDatabase, false);
             } else {
                 message.error(result.message);
             }
@@ -233,7 +286,8 @@ const HyperDB = () => {
                 message.success(result.message);
                 setModalVisible(false);
                 form.resetFields();
-                fetchData();
+                // 保持当前分页状态，不重置分页
+                fetchData(storeGlobalUser.selectedDatabase, false);
             } else {
                 message.error(result.message);
             }
@@ -256,7 +310,8 @@ const HyperDB = () => {
 
             if (result.success) {
                 message.success(result.message);
-                fetchData();
+                // 保持当前分页状态，不重置分页
+                fetchData(storeGlobalUser.selectedDatabase, false);
             } else {
                 message.error(result.message);
             }
@@ -279,7 +334,8 @@ const HyperDB = () => {
 
             if (result.success) {
                 message.success(result.message);
-                fetchData();
+                // 保持当前分页状态，不重置分页
+                fetchData(storeGlobalUser.selectedDatabase, false);
             } else {
                 message.error(result.message);
             }
@@ -500,7 +556,108 @@ const HyperDB = () => {
 
     // 数据库切换处理
     const onDatabaseChange = () => {
-        fetchData(storeGlobalUser.selectedDatabase);
+        // 重置分页
+        setVerticesPagination({
+            current: 1,
+            pageSize: 10,
+            total: 0
+        });
+        setHyperedgesPagination({
+            current: 1,
+            pageSize: 10,
+            total: 0
+        });
+        fetchData(storeGlobalUser.selectedDatabase, true);
+    };
+
+    // 处理vertices分页变化
+    const handleVerticesTableChange = (pagination) => {
+        setVerticesPagination(pagination);
+        // 重新请求数据
+        fetchVerticesData(pagination.current, pagination.pageSize);
+    };
+
+    // 处理hyperedges分页变化
+    const handleHyperedgesTableChange = (pagination) => {
+        setHyperedgesPagination(pagination);
+        // 重新请求数据
+        fetchHyperedgesData(pagination.current, pagination.pageSize);
+    };
+
+    // 获取vertices数据
+    const fetchVerticesData = async (page = 1, pageSize = 10) => {
+        const database = storeGlobalUser.selectedDatabase;
+        if (!database) return;
+
+        setLoading(true);
+        try {
+            const verticesUrl = `${SERVER_URL}/db/vertices?database=${encodeURIComponent(database)}&page=${page}&page_size=${pageSize}`;
+            const response = await fetch(verticesUrl);
+
+            if (!response.ok) {
+                throw new Error(`Vertices API failed: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.data) {
+                setVertices(data.data);
+                setVerticesPagination({
+                    current: data.page,
+                    pageSize: data.page_size,
+                    total: data.total
+                });
+            } else {
+                setVertices(data);
+                setVerticesPagination({
+                    current: 1,
+                    pageSize: data.length,
+                    total: data.length
+                });
+            }
+        } catch (error) {
+            console.error('Fetch vertices error:', error);
+            message.error(t('database.fetch_data_failed') + '：' + error.message);
+        }
+        setLoading(false);
+    };
+
+    // 获取hyperedges数据
+    const fetchHyperedgesData = async (page = 1, pageSize = 10) => {
+        const database = storeGlobalUser.selectedDatabase;
+        if (!database) return;
+
+        setLoading(true);
+        try {
+            const hyperedgesUrl = `${SERVER_URL}/db/hyperedges?database=${encodeURIComponent(database)}&page=${page}&page_size=${pageSize}`;
+            const response = await fetch(hyperedgesUrl);
+
+            if (!response.ok) {
+                throw new Error(`Hyperedges API failed: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.data) {
+                setHyperedges(data.data);
+                setHyperedgesPagination({
+                    current: data.page,
+                    pageSize: data.page_size,
+                    total: data.total
+                });
+            } else {
+                setHyperedges(data);
+                setHyperedgesPagination({
+                    current: 1,
+                    pageSize: data.length,
+                    total: data.length
+                });
+            }
+        } catch (error) {
+            console.error('Fetch hyperedges error:', error);
+            message.error(t('database.fetch_data_failed') + '：' + error.message);
+        }
+        setLoading(false);
     };
 
     return (
@@ -522,10 +679,10 @@ const HyperDB = () => {
                 {storeGlobalUser.selectedDatabase && (
                     <Row gutter={16} style={{ marginTop: 16 }}>
                         <Col span={6}>
-                            <Statistic title={t('database.entity_count')} value={vertices.length} prefix={<DatabaseOutlined />} />
+                            <Statistic title={t('database.entity_count')} value={verticesPagination.total} prefix={<DatabaseOutlined />} />
                         </Col>
                         <Col span={6}>
-                            <Statistic title={t('database.hyperedge_count')} value={hyperedges.length} prefix={<DatabaseOutlined />} />
+                            <Statistic title={t('database.hyperedge_count')} value={hyperedgesPagination.total} prefix={<DatabaseOutlined />} />
                         </Col>
                     </Row>
                 )}
@@ -551,7 +708,8 @@ const HyperDB = () => {
                             columns={vertexColumns}
                             dataSource={verticesTableData}
                             loading={loading}
-                            pagination={{ pageSize: 10 }}
+                            pagination={verticesPagination}
+                            onChange={handleVerticesTableChange}
                             scroll={{ x: 300 }}
                         />
                     </Card>
@@ -573,7 +731,8 @@ const HyperDB = () => {
                             columns={hyperedgeColumns}
                             dataSource={hyperedgesTableData}
                             loading={loading}
-                            pagination={{ pageSize: 10 }}
+                            pagination={hyperedgesPagination}
+                            onChange={handleHyperedgesTableChange}
                             scroll={{ x: 400 }}
                         />
                     </Card>
@@ -581,8 +740,8 @@ const HyperDB = () => {
             ) : (
                 <Card style={{ textAlign: 'center', padding: '60px 0' }}>
                     <DatabaseOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: 16 }} />
-                        <h3>{t('database.select_database_prompt')}</h3>
-                        <p style={{ color: '#999' }}>{t('database.select_database_help')}</p>
+                    <h3>{t('database.select_database_prompt')}</h3>
+                    <p style={{ color: '#999' }}>{t('database.select_database_help')}</p>
                 </Card>
             )}
 
@@ -677,91 +836,91 @@ const HyperDB = () => {
                             </div>
                         </div>
                     ) : (
-                    // 其他情况（添加/编辑）显示正常表单
-                            <Form
-                                form={form}
-                                layout="vertical"
-                                onFinish={modalDataType === 'vertex' ? handleVertexSubmit : handleHyperedgeSubmit}
-                            >
-                                {modalDataType === 'vertex' ? (
-                                    <>
-                                        <Form.Item
-                                            name="vertex_id"
-                                            label={t('database.vertex_id')}
-                                            rules={[{ required: modalType === 'add', message: t('database.vertex_id_required') }]}
-                                        >
-                                            <Input
-                                                placeholder={t('database.enter_vertex_id')}
-                                                disabled={modalType !== 'add'}
-                                            />
-                                        </Form.Item>
-                                        <Form.Item name="entity_name" label={t('database.entity_name')}>
-                                            <Input placeholder={t('database.enter_entity_name')} disabled={modalType === 'view'} />
-                                        </Form.Item>
-                                        <Form.Item name="entity_type" label={t('database.entity_type')}>
-                                            <Input placeholder={t('database.enter_entity_type')} disabled={modalType === 'view'} />
-                                        </Form.Item>
-                                        <Form.Item name="description" label={t('database.description')}>
-                                            <TextArea
-                                                rows={3}
-                                                placeholder={t('database.enter_description')}
-                                                disabled={modalType === 'view'}
-                                            />
-                                        </Form.Item>
-                                        <Form.Item name="additional_properties" label={t('database.additional_properties')}>
-                                            <TextArea
-                                                rows={3}
-                                                placeholder={t('database.enter_additional_properties')}
-                                                disabled={modalType === 'view'}
-                                            />
-                                        </Form.Item>
-                                    </>
-                                ) : (
-                            <>
-                                {modalType === 'view' && (
-                                    <Card
-                                                    title={t('database.hyperedge_info')}
-                                        size="small"
-                                        style={{ marginBottom: '16px' }}
+                        // 其他情况（添加/编辑）显示正常表单
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            onFinish={modalDataType === 'vertex' ? handleVertexSubmit : handleHyperedgeSubmit}
+                        >
+                            {modalDataType === 'vertex' ? (
+                                <>
+                                    <Form.Item
+                                        name="vertex_id"
+                                        label={t('database.vertex_id')}
+                                        rules={[{ required: modalType === 'add', message: t('database.vertex_id_required') }]}
                                     >
-                                        <Descriptions size="small" column={1}>
-                                                        <Descriptions.Item label={t('database.contained_vertices')}>
-                                                {selectedRecord && selectedRecord.split('|*|').map((vertex, index) => (
-                                                    <Tag key={index} color="blue" style={{ margin: '2px' }}>
-                                                        {vertex}
-                                                    </Tag>
-                                                ))}
-                                            </Descriptions.Item>
-                                        </Descriptions>
-                                    </Card>
-                                )}
+                                        <Input
+                                            placeholder={t('database.enter_vertex_id')}
+                                            disabled={modalType !== 'add'}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="entity_name" label={t('database.entity_name')}>
+                                        <Input placeholder={t('database.enter_entity_name')} disabled={modalType === 'view'} />
+                                    </Form.Item>
+                                    <Form.Item name="entity_type" label={t('database.entity_type')}>
+                                        <Input placeholder={t('database.enter_entity_type')} disabled={modalType === 'view'} />
+                                    </Form.Item>
+                                    <Form.Item name="description" label={t('database.description')}>
+                                        <TextArea
+                                            rows={3}
+                                            placeholder={t('database.enter_description')}
+                                            disabled={modalType === 'view'}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="additional_properties" label={t('database.additional_properties')}>
+                                        <TextArea
+                                            rows={3}
+                                            placeholder={t('database.enter_additional_properties')}
+                                            disabled={modalType === 'view'}
+                                        />
+                                    </Form.Item>
+                                </>
+                            ) : (
+                                <>
+                                    {modalType === 'view' && (
+                                        <Card
+                                            title={t('database.hyperedge_info')}
+                                            size="small"
+                                            style={{ marginBottom: '16px' }}
+                                        >
+                                            <Descriptions size="small" column={1}>
+                                                <Descriptions.Item label={t('database.contained_vertices')}>
+                                                    {selectedRecord && selectedRecord.split('|*|').map((vertex, index) => (
+                                                        <Tag key={index} color="blue" style={{ margin: '2px' }}>
+                                                            {vertex}
+                                                        </Tag>
+                                                    ))}
+                                                </Descriptions.Item>
+                                            </Descriptions>
+                                        </Card>
+                                    )}
 
-                                <Form.Item
-                                    name="vertices"
-                                                label={t('database.vertices_title')}
-                                                rules={[{ required: modalType === 'add', message: t('database.vertices_required') }]}
-                                >
-                                    <Input
-                                                    placeholder={t('database.enter_vertices')}
-                                        disabled={modalType === 'edit' || modalType === 'view'}
-                                    />
-                                </Form.Item>
-                                            <Form.Item name="keywords" label={t('database.keywords')}>
-                                    <Input
-                                                    placeholder={t('database.enter_keywords')}
-                                        disabled={modalType === 'view'}
-                                    />
-                                </Form.Item>
-                                            <Form.Item name="summary" label={t('database.summary')}>
-                                    <TextArea
-                                        rows={3}
-                                                    placeholder={t('database.enter_summary')}
-                                        disabled={modalType === 'view'}
-                                    />
-                                </Form.Item>
-                            </>
-                                )}
-                            </Form>
+                                    <Form.Item
+                                        name="vertices"
+                                        label={t('database.vertices_title')}
+                                        rules={[{ required: modalType === 'add', message: t('database.vertices_required') }]}
+                                    >
+                                        <Input
+                                            placeholder={t('database.enter_vertices')}
+                                            disabled={modalType === 'edit' || modalType === 'view'}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="keywords" label={t('database.keywords')}>
+                                        <Input
+                                            placeholder={t('database.enter_keywords')}
+                                            disabled={modalType === 'view'}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="summary" label={t('database.summary')}>
+                                        <TextArea
+                                            rows={3}
+                                            placeholder={t('database.enter_summary')}
+                                            disabled={modalType === 'view'}
+                                        />
+                                    </Form.Item>
+                                </>
+                            )}
+                        </Form>
                     )}
                 </Spin>
             </Modal>

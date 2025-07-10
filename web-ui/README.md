@@ -19,7 +19,7 @@ HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG �
 - 交互式超图可视化
 - 支持节点和超边的详细信息查看
 - 动态图形布局和缩放功能
-- 基于 AntV G6 的专业图形渲染
+- 超图渲染
 ![graph](./assets/graph.png)
 
 ### 🗄️ HypergraphDB 管理 (DB)
@@ -78,7 +78,7 @@ HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG �
 - Python 3.8+
 - npm/yarn
 
-### 后端部署
+### 后端启动
 
 1. 进入后端目录：
 ```bash
@@ -90,23 +90,16 @@ cd web-ui/backend
 pip install -r requirements.txt
 ```
 
+可下载解析好的3个demo数据库 [here](https://pan.baidu.com/s/1mrDJVpMW59gLtRRSXafXdw?pwd=w642)
+
+解压后复制到 `web-ui/backend/hyperrag_cache` 目录下
+
 3. 启动开发服务器：
 ```bash
 fastapi dev main.py
 ```
 
-4. 生产环境部署：
-```bash
-# 后台运行
-nohup fastapi run main.py > server.log 2>&1 &
-
-# 或使用 uvicorn
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-后端服务将在 `http://127.0.0.1:8000` 启动
-
-### 前端部署
+### 前端启动
 
 1. 进入前端目录：
 ```bash
@@ -117,21 +110,12 @@ cd web-ui/frontend
 ```bash
 npm install
 # 或
-yarn install
+pnpm install
 ```
 
 3. 启动开发服务器：
 ```bash
 npm run dev
-# 或
-yarn dev
-```
-
-4. 构建生产版本：
-```bash
-npm run build
-# 或
-yarn build
 ```
 
 前端应用将在 `http://localhost:5173` 启动
@@ -186,10 +170,3 @@ yarn build
 - 文件上传进度
 - 嵌入处理进度
 - 错误状态提醒
-
-## 🔒 安全特性
-
-- CORS 跨域配置
-- 文件类型验证
-- 错误处理和日志记录
-- 连接状态监控
