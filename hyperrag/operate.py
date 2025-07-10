@@ -1049,6 +1049,7 @@ async def hyper_query(
             text_chunks_db,
             query_param,
         )
+
         
     if relation_keywords:
         relation_context = await _build_relation_query_context(
