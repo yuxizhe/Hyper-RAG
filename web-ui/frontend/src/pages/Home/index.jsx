@@ -11,7 +11,10 @@ import {
     Bot,
     Trash2,
     RotateCcw,
-    Loader2
+    Loader2,
+    Zap,
+    Layers,
+    BookOpen
 } from 'lucide-react'
 import {
     Button,
@@ -69,7 +72,7 @@ const HyperRAGHome = () => {
             // Create default conversation
             const defaultConv = {
                 id: 'default',
-                title: 'New Conversation',
+                title: 'Chat 1',
                 messages: [],
                 createdAt: new Date()
             }
@@ -185,9 +188,9 @@ const HyperRAGHome = () => {
 
         if (data.success) {
         const modeNames = {
-          'hyper': 'Hyper',
+            'hyper': 'Hyper-RAG',
             'hyper-lite': 'Hyper-Lite',
-            'naive': 'Naive'
+            'naive': 'RAG'
         }
             const modeName = modeNames[queryMode] || queryMode
             const responseContent = `${data.response || 'No response content'}\n\n---\n*Mode: ${modeName}*`
@@ -228,23 +231,50 @@ const HyperRAGHome = () => {
         <div className="flex bg-gray-50">
             {/* Sidebar */}
             <div className="w-52 bg-gray-100 border-r border-gray-200 flex flex-col">
-                <div className="flex items-center space-x-4 m-4">
-                    <Settings className="size-10 text-gray-500" />
-                    <span className="font-medium text-gray-700">Mode:</span>
-                    <Select value={queryMode} onValueChange={setQueryMode}>
-                        <SelectTrigger className="w-40">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="hyper">Hyper</SelectItem>
-                            <SelectItem value="hyper-lite">Hyper-Lite</SelectItem>
-                            <SelectItem value="naive">Naive</SelectItem>
-                        </SelectContent>
-                    </Select>
+
+                {/* Mode Selector - Now prominently displayed */}
+
+                <div className="flex items-center space-x-1 p-3">
+                    <div className="flex flex-col bg-gray-100 rounded-lg p-1 w-full space-y-1">
+                        <div className="flex items-center space-x-2 mb-3">
+                            <Settings className="w-5 h-5 shrink-0 text-gray-500" />
+                            <span className="font-medium text-gray-700 text-sm">Mode: </span>
+                        </div>
+                        <button
+                            onClick={() => setQueryMode('hyper')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'hyper'
+                                ? 'bg-purple-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <Zap className="w-4 h-4 shrink-0" />
+                            <span>Hyper-RAG</span>
+                        </button>
+                        <button
+                            onClick={() => setQueryMode('hyper-lite')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'hyper-lite'
+                                ? 'bg-green-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <Layers className="w-4 h-4 shrink-0" />
+                            <span>Hyper-Lite-RAG</span>
+                        </button>
+                        <button
+                            onClick={() => setQueryMode('naive')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'naive'
+                                ? ' bg-blue-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <BookOpen className="w-4 h-4 shrink-0" />
+                            <span>Naive-RAG</span>
+                        </button>
+                    </div>
                 </div>
                 {/* Header */}
+                <Separator className="my-3" />
                 <div className="p-4 border-b border-gray-200">
-
                     <Button
                         onClick={createNewConversation}
                         className="w-full"
@@ -292,8 +322,6 @@ const HyperRAGHome = () => {
                     </div>
                 </ScrollArea>
 
-
-
                 {/* Controls */}
                 <div className="p-4 border-t border-gray-200 space-y-4">
                     <Button
@@ -308,13 +336,11 @@ const HyperRAGHome = () => {
 
             </div>
 
-
-
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
                 {/* Top Bar */}
                 <div className="bg-white border-b border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between w-full">
                         <div className="flex items-center space-x-4">
                             <Database className="w-5 h-5 text-gray-500" />
                             <span className="font-medium text-gray-700">Database:</span>
