@@ -604,15 +604,20 @@ async def query_hyperrag(query: QueryModel):
             max_token_for_entity_context=query.max_token_for_entity_context,
             max_token_for_relation_context=query.max_token_for_relation_context,
             only_need_context=query.only_need_context,
-            response_type=query.response_type
+            response_type=query.response_type,
+            return_type='json'
         )
         
         # 执行查询
-        response = await rag.aquery(query.question, param)
+        result = await rag.aquery(query.question, param)
         
+        # 处理结果格式
         return {
             "success": True,
-            "response": response,
+            "response": result.get("response", ""),
+            "entities": result.get("entities", []),
+            "hyperedges": result.get("hyperedges", []),
+            "text_units": result.get("text_units", []),
             "mode": query.mode,
             "question": query.question,
             "database": query.database or "default"

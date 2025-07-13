@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { observer } from 'mobx-react'
 import ReactMarkdown from 'react-markdown'
-import { 
+import {
     MessageCircle,
     Send,
     Plus,
@@ -33,6 +33,8 @@ import {
 import { storeGlobalUser } from '../../store/globalUser'
 import { SERVER_URL } from '../../utils'
 import DatabaseSelector from '../../components/DatabaseSelector'
+import RetrievalInfo from '../../components/RetrievalInfo'
+import RetrievalHyperGraph from '../../components/RetrievalHyperGraph'
 
 const HyperRAGHome = () => {
     // State
@@ -43,46 +45,46 @@ const HyperRAGHome = () => {
     const [isLoading, setIsLoading] = useState(false)
 
     // Storage keys
-  const STORAGE_KEYS = {
-      CONVERSATIONS: 'hyperrag_conversations_v2',
-      ACTIVE_ID: 'hyperrag_active_conversation_v2'
-  }
+    const STORAGE_KEYS = {
+        CONVERSATIONS: 'hyperrag_conversations_v2',
+        ACTIVE_ID: 'hyperrag_active_conversation_v2'
+    }
 
     // Utility functions
     const saveToStorage = () => {
         localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(conversations))
         localStorage.setItem(STORAGE_KEYS.ACTIVE_ID, activeConversationId)
-  }
+    }
 
     const loadFromStorage = () => {
-    try {
-        const savedConversations = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS)
-        const savedActiveId = localStorage.getItem(STORAGE_KEYS.ACTIVE_ID)
+        try {
+            const savedConversations = localStorage.getItem(STORAGE_KEYS.CONVERSATIONS)
+            const savedActiveId = localStorage.getItem(STORAGE_KEYS.ACTIVE_ID)
 
-        if (savedConversations) {
-            const parsed = JSON.parse(savedConversations)
-            setConversations(parsed)
+            if (savedConversations) {
+                const parsed = JSON.parse(savedConversations)
+                setConversations(parsed)
 
-            if (savedActiveId && parsed.find((c) => c.id === savedActiveId)) {
-                setActiveConversationId(savedActiveId)
-            } else if (parsed.length > 0) {
-                setActiveConversationId(parsed[0].id)
+                if (savedActiveId && parsed.find((c) => c.id === savedActiveId)) {
+                    setActiveConversationId(savedActiveId)
+                } else if (parsed.length > 0) {
+                    setActiveConversationId(parsed[0].id)
+                }
+            } else {
+                // Create default conversation
+                const defaultConv = {
+                    id: 'default',
+                    title: 'Chat 1',
+                    messages: [],
+                    createdAt: new Date()
+                }
+                setConversations([defaultConv])
+                setActiveConversationId('default')
             }
-        } else {
-            // Create default conversation
-            const defaultConv = {
-                id: 'default',
-                title: 'Chat 1',
-                messages: [],
-                createdAt: new Date()
-            }
-            setConversations([defaultConv])
-            setActiveConversationId('default')
+        } catch (error) {
+            console.error('Failed to load from storage:', error)
         }
-    } catch (error) {
-        console.error('Failed to load from storage:', error)
     }
-  }
 
     const createNewConversation = () => {
         const newConv = {
@@ -93,7 +95,7 @@ const HyperRAGHome = () => {
         }
         setConversations(prev => [newConv, ...prev])
         setActiveConversationId(newConv.id)
-  }
+    }
 
     const deleteConversation = (id) => {
         setConversations(prev => prev.filter(c => c.id !== id))
@@ -104,22 +106,26 @@ const HyperRAGHome = () => {
             } else {
                 createNewConversation()
             }
+        }
     }
-  }
 
     const clearAllChats = () => {
         setConversations([])
         createNewConversation()
-  }
+    }
 
     const activeConversation = conversations.find(c => c.id === activeConversationId)
 
-    const addMessage = (content, role) => {
+    const addMessage = (content, role, extraData = null) => {
         const newMessage = {
             id: Date.now(),
             content,
             role,
-            timestamp: new Date()
+            timestamp: new Date(),
+            // 添加检索信息字段
+            entities: extraData?.entities || [],
+            hyperedges: extraData?.hyperedges || [],
+            text_units: extraData?.text_units || []
         }
 
         setConversations(prev =>
@@ -131,7 +137,7 @@ const HyperRAGHome = () => {
         )
     }
 
-    const updateLastMessage = (content) => {
+    const updateLastMessage = (content, extraData = null) => {
         setConversations(prev =>
             prev.map(conv =>
                 conv.id === activeConversationId
@@ -139,7 +145,14 @@ const HyperRAGHome = () => {
                         ...conv,
                         messages: conv.messages.map((msg, index) =>
                             index === conv.messages.length - 1
-                                ? { ...msg, content }
+                                ? {
+                                    ...msg,
+                                    content,
+                                    // 如果有新的检索信息，更新它们
+                                    entities: extraData?.entities || msg.entities || [],
+                                    hyperedges: extraData?.hyperedges || msg.hyperedges || [],
+                                    text_units: extraData?.text_units || msg.text_units || []
+                                }
                                 : msg
                         )
                     }
@@ -153,7 +166,7 @@ const HyperRAGHome = () => {
 
         const userMessage = inputValue.trim()
         setInputValue('')
-    setIsLoading(true)
+        setIsLoading(true)
 
         // Add user message
         addMessage(userMessage, 'user')
@@ -161,50 +174,80 @@ const HyperRAGHome = () => {
         // Add loading assistant message
         addMessage('正在思考中...', 'assistant')
 
-    try {
-      const response = await fetch(`${SERVER_URL}/hyperrag/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            question: userMessage,
-            mode: queryMode,
-          top_k: 60,
-          max_token_for_text_unit: 1600,
-          max_token_for_entity_context: 300,
-          max_token_for_relation_context: 1600,
-          only_need_context: false,
-          response_type: 'Multiple Paragraphs',
-          database: storeGlobalUser.selectedDatabase
-        }),
-      })
+        try {
+            const response = await fetch(`${SERVER_URL}/hyperrag/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: userMessage,
+                    mode: queryMode,
+                    top_k: 60,
+                    max_token_for_text_unit: 1600,
+                    max_token_for_entity_context: 300,
+                    max_token_for_relation_context: 1600,
+                    only_need_context: false,
+                    response_type: 'Multiple Paragraphs',
+                    database: storeGlobalUser.selectedDatabase
+                }),
+            })
 
-      if (!response.ok) {
-          throw new Error(`Network error: ${response.status}`)
-      }
+            if (!response.ok) {
+                throw new Error(`Network error: ${response.status}`)
+            }
 
-        const data = await response.json()
+            const data = await response.json()
 
-        if (data.success) {
-        const modeNames = {
-            'hyper': 'Hyper-RAG',
-            'hyper-lite': 'Hyper-Lite',
-            'naive': 'RAG'
+            if (data.success) {
+                const modeNames = {
+                    'hyper': 'Hyper-RAG',
+                    'hyper-lite': 'Hyper-Lite',
+                    'naive': 'RAG'
+                }
+                const modeName = modeNames[queryMode] || queryMode
+
+                // 构建响应内容，包含检索信息摘要
+                let responseContent = data.response || 'No response content'
+
+                // 添加检索信息摘要
+                // if (data.entities && data.entities.length > 0) {
+                //     responseContent += `\n\n**检索到的实体 (${data.entities.length}个):**\n`
+                //     responseContent += data.entities.slice(0, 5).map((entity, idx) =>
+                //         `${idx + 1}. ${entity.entity_name} (${entity.entity_type})`
+                //     ).join('\n')
+                //     if (data.entities.length > 5) {
+                //         responseContent += `\n... 及其他 ${data.entities.length - 5} 个实体`
+                //     }
+                // }
+
+                // if (data.hyperedges && data.hyperedges.length > 0) {
+                //     responseContent += `\n\n**检索到的超边 (${data.hyperedges.length}个):**\n`
+                //     responseContent += data.hyperedges.slice(0, 3).map((edge, idx) =>
+                //         `${idx + 1}. ${Array.isArray(edge.entity_set) ? edge.entity_set.join(' ↔ ') : edge.entity_set}`
+                //     ).join('\n')
+                //     if (data.hyperedges.length > 3) {
+                //         responseContent += `\n... 及其他 ${data.hyperedges.length - 3} 个超边`
+                //     }
+                // }
+
+                responseContent += `\n\n---\n*Mode: ${modeName}*`
+
+                // 更新消息，包含检索信息
+                updateLastMessage(responseContent, {
+                    entities: data.entities || [],
+                    hyperedges: data.hyperedges || [],
+                    text_units: data.text_units || []
+                })
+            } else {
+                throw new Error(data.message || 'Query failed')
+            }
+        } catch (error) {
+            console.error('Error sending message:', error)
+            updateLastMessage(`Sorry, an error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        } finally {
+            setIsLoading(false)
         }
-            const modeName = modeNames[queryMode] || queryMode
-            const responseContent = `${data.response || 'No response content'}\n\n---\n*Mode: ${modeName}*`
-
-            updateLastMessage(responseContent)
-      } else {
-            throw new Error(data.message || 'Query failed')
-        }
-    } catch (error) {
-        console.error('Error sending message:', error)
-        updateLastMessage(`Sorry, an error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsLoading(false)
-    }
     }
 
     const handleKeyPress = (e) => {
@@ -296,7 +339,7 @@ const HyperRAGHome = () => {
                                     : 'hover:bg-gray-50'
                                     }`}
                                 onClick={() => setActiveConversationId(conv.id)}
-              >
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-2 flex-1 min-w-0">
                                         <MessageCircle className="w-4 h-4 text-gray-500" />
@@ -376,7 +419,7 @@ const HyperRAGHome = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-6 max-w-4xl mx-auto">
+                                <div className="space-y-6 mx-auto">
                                 {activeConversation?.messages.map((message) => (
                                     <div key={message.id + message.content} className="flex space-x-4">
                                         <Avatar>
@@ -406,24 +449,48 @@ const HyperRAGHome = () => {
                                                 : 'bg-gray-50 border border-gray-200'
                                                 }`}>
                                                 {message.role === 'assistant' ? (
-                                                    <div className="prose prose-sm max-w-none">
-                                                        <ReactMarkdown
-                                                            components={{
-                                                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                                                code: ({ children, className }) => (
-                                                                    <code className={`${className} bg-gray-100 px-1 rounded`}>
-                                                                        {children}
-                                                                    </code>
-                                                                ),
-                                                                pre: ({ children }) => (
-                                                                    <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                                                                        {children}
-                                                                    </pre>
-                                                                ),
-                                                            }}
-                                                        >
-                                                            {message.content}
-                                                        </ReactMarkdown>
+                                                    <div className='flex'>
+                                                        <div className="flex-1 prose prose-sm z-0">
+                                                            <ReactMarkdown
+                                                                components={{
+                                                                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                                                    code: ({ children, className }) => (
+                                                                        <code className={`${className} bg-gray-100 px-1 rounded`}>
+                                                                            {children}
+                                                                        </code>
+                                                                    ),
+                                                                    pre: ({ children }) => (
+                                                                        <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                                                                            {children}
+                                                                        </pre>
+                                                                    ),
+                                                                }}
+                                                            >
+                                                                {message.content}
+                                                            </ReactMarkdown>
+                                                        </div>
+                                                        <div className='flex-[0.7] overflow-auto pl-2 z-10'>
+                                                            {/* 显示检索信息 */}
+                                                            <RetrievalInfo
+                                                            entities={message.entities || []}
+                                                            hyperedges={message.hyperedges || []}
+                                                            textUnits={message.text_units || []}
+                                                        />
+
+                                                        {/* 超图可视化展示 */}
+                                                        {((message.entities && message.entities.length > 0) ||
+                                                            (message.hyperedges && message.hyperedges.length > 0)) && (
+                                                                <div className="mt-4">
+                                                                    <RetrievalHyperGraph
+                                                                        entities={message.entities || []}
+                                                                        hyperedges={message.hyperedges || []}
+                                                                        height="400px"
+                                                                        // showTooltip={true}
+                                                                        graphId={`retrieval-graph-${message.id}`}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                         <p className="text-gray-900 whitespace-pre-wrap m-0">
@@ -450,7 +517,7 @@ const HyperRAGHome = () => {
                                     className="flex-1 h-7 resize-none"
                                     disabled={isLoading}
                                 />
-                                <Button 
+                                <Button
                                     onClick={handleSubmit}
                                     disabled={!inputValue.trim() || isLoading}
                                     size="lg"
@@ -465,10 +532,10 @@ const HyperRAGHome = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    )
 }
 
 export default observer(HyperRAGHome) 

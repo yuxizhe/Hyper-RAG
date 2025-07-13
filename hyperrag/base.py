@@ -24,6 +24,8 @@ class QueryParam:
     max_token_for_entity_context: int = 300
     # Number of tokens for the relationship descriptions
     max_token_for_relation_context: int = 1600
+    # return type
+    return_type: Literal["json", "text"] = "text"
 
 
 @dataclass

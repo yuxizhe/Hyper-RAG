@@ -11,9 +11,8 @@ HyperRAG Web UI 提供了一个直观的 Web 界面来管理和使用 HyperRAG �
 ### 🔍 检索问答 (QA)
 - 智能对话界面，支持多种查询模式
 - 支持 `hyper`、`hyper-lite`、`naive` 三种查询模式
-- 实时流式回答，优秀的用户体验
 - 对话历史管理和持久化存储
-![chat](./assets/chat.png)
+![chat](./assets/chat_e.png)
 
 ### 📊 超图展示 (Graph)
 - 交互式超图可视化
