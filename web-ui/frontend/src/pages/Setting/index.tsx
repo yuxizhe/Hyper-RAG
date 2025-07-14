@@ -387,7 +387,7 @@ const Setting: React.FC = () => {
           </Card>
 
           {/* 数据库配置区块 */}
-          <Card
+          {/* <Card
             title={
               <span>
                 <DatabaseOutlined style={{ marginRight: '8px' }} />
@@ -439,7 +439,7 @@ const Setting: React.FC = () => {
                 <Text type="danger">{t('settings.connection_failed')}</Text>
               )}
             </Form.Item>
-          </Card>
+          </Card> */}
 
           <Divider />
 
