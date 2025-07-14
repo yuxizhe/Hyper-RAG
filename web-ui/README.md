@@ -89,7 +89,7 @@ cd web-ui/backend
 pip install -r requirements.txt
 ```
 
-可下载解析好的3个demo数据库 [here]([https://pan.baidu.com/s/1mrDJVpMW59gLtRRSXafXdw?pwd=w642](https://pan.baidu.com/s/1mrDJVpMW59gLtRRSXafXdw?pwd=w642#list/path=%2Fsharelink484952695-6132723540665%2FHyper-RAG%2Fweb-ui&parentPath=%2Fsharelink484952695-6132723540665))
+可下载解析好的3个demo数据库 [here](https://pan.baidu.com/s/1mrDJVpMW59gLtRRSXafXdw?pwd=w642#list/path=%2Fsharelink484952695-6132723540665%2FHyper-RAG%2Fweb-ui&parentPath=%2Fsharelink484952695-6132723540665).
 
 解压后复制到 `web-ui/backend/hyperrag_cache` 目录下
 
