@@ -123,9 +123,10 @@ const DatabaseSelector = ({
                     icon={<DatabaseOutlined />}
                     title={db.description}
                     style={{
-                        borderColor: storeGlobalUser.selectedDatabase === db.name ? '#1890ff' : undefined
+                        borderColor: storeGlobalUser.selectedDatabase === db.name ? '#1890ff' : undefined,
+                        borderRadius: '0.5rem'
                     }}
-                    className='py-6 px-4'
+                    className='py-5 px-3'
                 >
                     {db.description.replace('超图', '')}
                 </Button>

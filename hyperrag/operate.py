@@ -689,7 +689,7 @@ async def _build_entity_query_context(
         text_units_section_list.append([i, t["content"]])
     text_units_context = list_of_list_to_csv(text_units_section_list)
 
-    return f"""
+    context_string = f"""
 -----Entities-----
 ```csv
 {entities_context}
@@ -703,6 +703,41 @@ async def _build_entity_query_context(
 {text_units_context}
 ```
 """
+    
+    # 返回包含上下文字符串和结构化数据的字典
+    return {
+        "context": context_string,
+        "entities": [
+            {
+                "id": i,
+                "entity_name": n["entity_name"],
+                "entity_type": n.get("entity_type", "UNKNOWN"),
+                "description": n.get("description", "UNKNOWN"),
+                "additional_properties": n.get("additional_properties", "UNKNOWN"),
+                "rank": n["rank"]
+            }
+            for i, n in enumerate(node_datas)
+        ],
+        "hyperedges": [
+            {
+                "id": i,
+                "entity_set": e["src_tgt"],
+                "description": e["description"],
+                "keywords": e["keywords"],
+                "weight": e["weight"],
+                "rank": e["rank"]
+            }
+            for i, e in enumerate(use_relations)
+        ],
+        "text_units": [
+            {
+                "id": i,
+                "content": t["content"]
+            }
+            for i, t in enumerate(use_text_units)
+        ]
+    }
+
 
 
 async def _find_most_related_text_unit_from_entities(
@@ -904,7 +939,7 @@ async def _build_relation_query_context(
         text_units_section_list.append([i, t["content"]])
     text_units_context = list_of_list_to_csv(text_units_section_list)
 
-    return f"""
+    context_string = f"""
 -----Entities-----
 ```csv
 {entities_context}
@@ -919,6 +954,39 @@ async def _build_relation_query_context(
 ```
 """
 
+    # 返回包含上下文字符串和结构化数据的字典
+    return {
+        "context": context_string,
+        "entities": [
+            {
+                "id": i,
+                "entity_name": n["entity_name"],
+                "entity_type": n.get("entity_type", "UNKNOWN"),
+                "description": n.get("description", "UNKNOWN"),
+                "additional_properties": n.get("additional properties", "UNKNOWN"),
+                "rank": n["rank"]
+            }
+            for i, n in enumerate(use_entities)
+        ],
+        "hyperedges": [
+            {
+                "id": i,
+                "entity_set": e["id_set"],
+                "description": e["description"],
+                "keywords": e["keywords"],
+                "weight": e["weight"],
+                "rank": e["rank"]
+            }
+            for i, e in enumerate(edge_datas)
+        ],
+        "text_units": [
+            {
+                "id": i,
+                "content": t["content"]
+            }
+            for i, t in enumerate(use_text_units)
+        ]
+    }
 
 async def _find_most_related_entities_from_relationships(
     edge_datas: list[dict],
@@ -998,7 +1066,7 @@ async def hyper_query(
     text_chunks_db: BaseKVStorage[TextChunkSchema],
     query_param: QueryParam,
     global_config: dict,
-) -> str:
+):
     entity_context = None
     relation_context = None
     use_model_func = global_config["llm_model_func"]
@@ -1063,7 +1131,12 @@ async def hyper_query(
         combine the information from the local_query and global_query,
         so that we can have the final retrieval information.
     """
-    context = combine_contexts(relation_context, entity_context)
+    context = combine_contexts(relation_context.get("context"), entity_context.get("context"))
+    contextJson = {
+        "entities": entity_context.get("entities") + relation_context.get("entities"),
+        "hyperedges": relation_context.get("hyperedges") + relation_context.get("hyperedges"),
+        "text_units": relation_context.get("text_units") + relation_context.get("text_units")
+    }
 
     if query_param.only_need_context:
         return context
@@ -1096,7 +1169,10 @@ async def hyper_query(
             .replace("</system>", "")
             .strip()
         )
-    return response
+    if query_param.return_type == "json":
+        contextJson["response"] = response
+        response = contextJson
+    return response 
 
 
 async def hyper_query_lite(
@@ -1156,7 +1232,7 @@ async def hyper_query_lite(
         combine the information from the local_query and global_query,
         so that we can have the final retrieval information.
     """
-    context = entity_context
+    context = entity_context.get("context")
 
     if query_param.only_need_context:
         return context
@@ -1188,6 +1264,9 @@ async def hyper_query_lite(
             .replace("</system>", "")
             .strip()
         )
+    if query_param.return_type == "json":
+        entity_context["response"] = response
+        response = entity_context
     return response
 
 
@@ -1309,5 +1388,8 @@ async def naive_query(
             .replace("</system>", "")
             .strip()
         )
-
+    if query_param.return_type == "json":
+        response = {
+            "response": response,
+        }
     return response
