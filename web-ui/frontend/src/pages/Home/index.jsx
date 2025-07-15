@@ -14,7 +14,7 @@ import {
     Loader2,
     Zap,
     Layers,
-    BookOpen
+    BookOpen,
 } from 'lucide-react'
 import {
     Button,
@@ -202,8 +202,10 @@ const HyperRAGHome = () => {
             if (data.success) {
                 const modeNames = {
                     'hyper': 'Hyper-RAG',
-                    'hyper-lite': 'Hyper-Lite',
-                    'naive': 'RAG'
+                    'hyper-lite': 'Hyper-RAG-Lite',
+                    'graph': 'Graph-RAG',
+                    'naive': 'RAG',
+                    'llm': 'LLM',
                 }
                 const modeName = modeNames[queryMode] || queryMode
 
@@ -284,6 +286,36 @@ const HyperRAGHome = () => {
                             <span className="font-medium text-gray-700 text-sm">Mode: </span>
                         </div>
                         <button
+                            onClick={() => setQueryMode('llm')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'llm'
+                                ? 'bg-yellow-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <Bot className="w-4 h-4 shrink-0" />
+                            <span>LLM</span>
+                        </button>
+                        <button
+                            onClick={() => setQueryMode('naive')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'naive'
+                                ? ' bg-blue-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <BookOpen className="w-4 h-4 shrink-0" />
+                            <span>RAG</span>
+                        </button>
+                        <button
+                            onClick={() => setQueryMode('graph')}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'graph'
+                                ? 'bg-orange-500 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            <Bot className="w-4 h-4 shrink-0" />
+                            <span>Graph-RAG</span>
+                        </button>
+                        <button
                             onClick={() => setQueryMode('hyper')}
                             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'hyper'
                                 ? 'bg-purple-500 text-white shadow-md'
@@ -301,17 +333,7 @@ const HyperRAGHome = () => {
                                 }`}
                         >
                             <Layers className="w-4 h-4 shrink-0" />
-                            <span>Hyper-Lite-RAG</span>
-                        </button>
-                        <button
-                            onClick={() => setQueryMode('naive')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'naive'
-                                ? ' bg-blue-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <BookOpen className="w-4 h-4 shrink-0" />
-                            <span>Naive-RAG</span>
+                            <span>Hyper-RAG-Lite</span>
                         </button>
                     </div>
                 </div>

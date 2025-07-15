@@ -11,6 +11,8 @@ from .operate import (
     hyper_query_lite,
     hyper_query,
     naive_query,
+    graph_query,
+    llm_query,
 )
 from .llm import (
     gpt_4o_mini_complete,
@@ -273,11 +275,27 @@ class HyperRAG:
                 param,
                 asdict(self),
             )
+        elif param.mode == "graph":
+            response = await graph_query(
+                query,
+                self.chunk_entity_relation_hypergraph,
+                self.entities_vdb,
+                self.relationships_vdb,
+                self.text_chunks,
+                param,
+                asdict(self),
+            )
         elif param.mode == "naive":
             response = await naive_query(
                 query,
                 self.chunks_vdb,
                 self.text_chunks,
+                param,
+                asdict(self),
+            )
+        elif param.mode == "llm":
+            response = await llm_query(
+                query,
                 param,
                 asdict(self),
             )

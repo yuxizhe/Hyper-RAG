@@ -22,6 +22,13 @@ export const routers = [
     icon: <SmileFilled />,
     children: [
       {
+        path: '/Hyper/qa',
+        name: '检索问答',
+        icon: <QuestionCircleOutlined />,
+        // permissionObj: true,
+        element: <Home />
+      },
+      {
         path: '/Hyper/show',
         name: '超图展示',
         icon: <DeploymentUnitOutlined />,
@@ -34,13 +41,6 @@ export const routers = [
         icon: <DatabaseOutlined />,
         // permissionObj: true,
         element: <HyperDB />
-      },
-      {
-        path: '/Hyper/qa',
-        name: '检索问答',
-        icon: <QuestionCircleOutlined />,
-        // permissionObj: true,
-        element: <Home />
       },
       {
         path: '/Hyper/files',

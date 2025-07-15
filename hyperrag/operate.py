@@ -1270,6 +1270,238 @@ async def hyper_query_lite(
     return response
 
 
+async def graph_query(
+    query,
+    knowledge_hypergraph_inst: BaseHypergraphStorage,
+    entities_vdb: BaseVectorStorage,
+    relationships_vdb: BaseVectorStorage,
+    text_chunks_db: BaseKVStorage[TextChunkSchema],
+    query_param: QueryParam,
+    global_config: dict,
+):
+    """
+    检索和返回 hypergraph db 中的成对关系
+    """
+    use_model_func = global_config["llm_model_func"]
+    kw_prompt_temp = PROMPTS["keywords_extraction"]
+    kw_prompt = kw_prompt_temp.format(query=query)
+    result = await use_model_func(kw_prompt)
+    try:
+        keywords_data = json.loads(result)
+        entity_keywords = keywords_data.get("low_level_keywords", [])
+        relation_keywords = keywords_data.get("high_level_keywords", [])
+        entity_keywords = ", ".join(entity_keywords)
+        relation_keywords = ", ".join(relation_keywords)
+    except json.JSONDecodeError:
+        try:
+            result = (
+                result.replace(kw_prompt[:-1], "")
+                .replace("user", "")
+                .replace("model", "")
+                .strip()
+            )
+            result = "{" + result.split("{")[1].split("}")[0] + "}"
+            keywords_data = json.loads(result)
+            relation_keywords = keywords_data.get("high_level_keywords", [])
+            entity_keywords = keywords_data.get("low_level_keywords", [])
+            relation_keywords = ", ".join(relation_keywords)
+            entity_keywords = ", ".join(entity_keywords)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            return PROMPTS["fail_response"]
+
+    # 只处理二元关系
+    def filter_pairwise_edges(edges):
+        return [e for e in edges if isinstance(e.get("id_set"), (list, tuple)) and len(e["id_set"]) == 2]
+
+    # 获取所有相关的二元关系
+    relation_context = None
+    if relation_keywords:
+        results = await relationships_vdb.query(relation_keywords, top_k=query_param.top_k)
+        if not len(results):
+            return PROMPTS["fail_response"]
+        edge_datas = await asyncio.gather(
+            *[knowledge_hypergraph_inst.get_hyperedge(r['id_set']) for r in results]
+        )
+        edge_degree = await asyncio.gather(
+            *[knowledge_hypergraph_inst.hyperedge_degree(e['id_set']) for e in results]
+        )
+        edge_datas = [
+            {"id_set": k["id_set"], "rank": d, **v}
+            for k, v, d in zip(results, edge_datas, edge_degree)
+            if v is not None
+        ]
+        # 只保留二元关系
+        edge_datas = filter_pairwise_edges(edge_datas)
+        edge_datas = sorted(
+            edge_datas, key=lambda x: (x["rank"], x["weight"]), reverse=True
+        )
+        edge_datas = truncate_list_by_token_size(
+            edge_datas,
+            key=lambda x: x["description"],
+            max_token_size=query_param.max_token_for_relation_context,
+        )
+        # 相关实体
+        entity_names = set()
+        for e in edge_datas:
+            for f in e["id_set"]:
+                if await knowledge_hypergraph_inst.has_vertex(f):
+                    entity_names.add(f)
+        node_datas = await asyncio.gather(
+            *[knowledge_hypergraph_inst.get_vertex(entity_name) for entity_name in entity_names]
+        )
+        node_degrees = await asyncio.gather(
+            *[knowledge_hypergraph_inst.vertex_degree(entity_name) for entity_name in entity_names]
+        )
+        node_datas = [
+            {**n, "entity_name": k, "rank": d}
+            for k, n, d in zip(entity_names, node_datas, node_degrees)
+            if n is not None
+        ]
+        node_datas = truncate_list_by_token_size(
+            node_datas,
+            key=lambda x: x["description"],
+            max_token_size=query_param.max_token_for_entity_context,
+        )
+        # 相关文本
+        text_units = [
+            split_string_by_multi_markers(dp["source_id"], [GRAPH_FIELD_SEP])
+            for dp in edge_datas
+        ]
+        all_text_units_lookup = {}
+        for index, unit_list in enumerate(text_units):
+            for c_id in unit_list:
+                if c_id not in all_text_units_lookup:
+                    all_text_units_lookup[c_id] = {
+                        "data": await text_chunks_db.get_by_id(c_id),
+                        "order": index,
+                    }
+        all_text_units = [
+            {"id": k, **v} for k, v in all_text_units_lookup.items() if v is not None and v["data"] is not None
+        ]
+        all_text_units = sorted(all_text_units, key=lambda x: x["order"])
+        all_text_units = truncate_list_by_token_size(
+            all_text_units,
+            key=lambda x: x["data"]["content"],
+            max_token_size=query_param.max_token_for_text_unit,
+        )
+        all_text_units = [t["data"] for t in all_text_units]
+        # 格式化 context
+        relations_section_list = [
+            ["id", "entity set", "description", "keywords", "weight", "rank"]
+        ]
+        for i, e in enumerate(edge_datas):
+            relations_section_list.append(
+                [
+                    i,
+                    e["id_set"],
+                    e["description"],
+                    e["keywords"],
+                    e["weight"],
+                    e["rank"],
+                ]
+            )
+        relations_context = list_of_list_to_csv(relations_section_list)
+        entites_section_list = [["id", "entity", "type", "description", "additional properties", "rank"]]
+        for i, n in enumerate(node_datas):
+            entites_section_list.append(
+                [
+                    i,
+                    n["entity_name"],
+                    n.get("entity_type", "UNKNOWN"),
+                    n.get("description", "UNKNOWN"),
+                    n.get("additional_properties", "UNKNOWN"),
+                    n["rank"],
+                ]
+            )
+        entities_context = list_of_list_to_csv(entites_section_list)
+        text_units_section_list = [["id", "content"]]
+        for i, t in enumerate(all_text_units):
+            text_units_section_list.append([i, t["content"]])
+        text_units_context = list_of_list_to_csv(text_units_section_list)
+        context_string = f"""
+-----Entities-----
+```csv
+{entities_context}
+```
+-----Relationships-----
+```csv
+{relations_context}
+```
+-----Sources-----
+```csv
+{text_units_context}
+```
+"""
+        # 返回包含上下文字符串和结构化数据的字典
+        contextJson = {
+            "context": context_string,
+            "entities": [
+                {
+                    "id": i,
+                    "entity_name": n["entity_name"],
+                    "entity_type": n.get("entity_type", "UNKNOWN"),
+                    "description": n.get("description", "UNKNOWN"),
+                    "additional_properties": n.get("additional_properties", "UNKNOWN"),
+                    "rank": n["rank"]
+                }
+                for i, n in enumerate(node_datas)
+            ],
+            "hyperedges": [
+                {
+                    "id": i,
+                    "entity_set": e["id_set"],
+                    "description": e["description"],
+                    "keywords": e["keywords"],
+                    "weight": e["weight"],
+                    "rank": e["rank"]
+                }
+                for i, e in enumerate(edge_datas)
+            ],
+            "text_units": [
+                {
+                    "id": i,
+                    "content": t["content"]
+                }
+                for i, t in enumerate(all_text_units)
+            ]
+        }
+        if query_param.only_need_context:
+            return context_string
+        if context_string is None:
+            return PROMPTS["fail_response"]
+        define_str = ""
+        if entity_keywords or relation_keywords:
+            entity_keywords = entity_keywords if entity_keywords else ""
+            relation_keywords = relation_keywords if relation_keywords else ""
+            define_str = PROMPTS["rag_define"]
+            define_str = define_str.format(ll_keywords=entity_keywords,hl_keywords=relation_keywords)
+        sys_prompt_temp = PROMPTS["rag_response"]
+        sys_prompt = sys_prompt_temp.format(
+            context_data=context_string, response_type=query_param.response_type
+        )
+        response = await use_model_func(
+            query + define_str,
+            system_prompt=sys_prompt,
+        )
+        if len(response) > len(sys_prompt):
+            response = (
+                response.replace(sys_prompt, "")
+                .replace("user", "")
+                .replace("model", "")
+                .replace(query, "")
+                .replace("<system>", "")
+                .replace("</system>", "")
+                .strip()
+            )
+        if query_param.return_type == "json":
+            contextJson["response"] = response
+            response = contextJson
+        return response
+    else:
+        return PROMPTS["fail_response"]
+
+
 def combine_contexts(relation_context, entity_context):
     # Function to extract entities, relationships, and sources from context strings
 
@@ -1393,3 +1625,39 @@ async def naive_query(
             "response": response,
         }
     return response
+
+
+async def llm_query(
+    query,
+    query_param: QueryParam,
+    global_config: dict,
+):
+    """
+    只调用 LLM，不进行任何数据查询。
+    """
+    use_model_func = global_config["llm_model_func"]
+    sys_prompt_temp = PROMPTS["rag_response"]
+    sys_prompt = sys_prompt_temp.format(
+        context_data="", response_type=query_param.response_type
+    )
+    response = await use_model_func(
+        query,
+        system_prompt=sys_prompt,
+    )
+    if len(response) > len(sys_prompt):
+        response = (
+            response.replace(sys_prompt, "")
+            .replace("user", "")
+            .replace("model", "")
+            .replace(query, "")
+            .replace("<system>", "")
+            .replace("</system>", "")
+            .strip()
+        )
+    if query_param.return_type == "json":
+        response = {
+            "response": response,
+        }
+    return response
+
+
