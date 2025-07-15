@@ -152,7 +152,7 @@ You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the H
 We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Web-UI](./web-ui/README.md).
 
 *Note: We welcome any contributions to improve it.*
-![vis-qa](./web-ui/assets/chat_e.png)
+![vis-qa](https://github.com/user-attachments/assets/7f4d6e44-f61c-4f6b-90b0-fb7a6374c845)
 ![vis-hg](./web-ui/assets/graph_e.png)
 
 

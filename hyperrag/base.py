@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 @dataclass
 class QueryParam:
-    mode: Literal["hyper", "hyper-lite", "naive"] = "hyper-query"
+    mode: Literal["hyper", "hyper-lite", "graph", "naive", "llm"] = "hyper-query"
     only_need_context: bool = False
     response_type: str = "Multiple Paragraphs"
     # Number of top-k items to retrieve; corresponds to entities in "local" mode and relationships in "global" mode.

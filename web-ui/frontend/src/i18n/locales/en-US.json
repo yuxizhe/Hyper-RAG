@@ -2,7 +2,7 @@
   "common": {
     "home": "Home",
     "settings": "Settings",
-    "database": "HyperGraphDB",
+    "database": "Hypergraph-DB",
     "files": "File Parsing",
     "api": "API",
     "graph": "Graph Display",
@@ -21,13 +21,13 @@
     "english": "English"
   },
   "menu": {
-    "home": "HyperChat",
+    "home": "Chat",
     "hyper": "HyperGraph",
-    "database": "HyperGraphDB",
-    "files": "File Parsing",
-    "graph": "Graph Display",
+    "database": "Hypergraph-DB",
+    "files": "Upload Documents",
+    "graph": "Visualization",
     "api": "API Documentation",
-    "settings": "System Settings"
+    "settings": "Settings"
   },
   "settings": {
     "title": "System Settings",
