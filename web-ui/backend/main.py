@@ -301,6 +301,19 @@ async def save_settings(settings: SettingsModel):
     """
     try:
         settings_dict = settings.dict()
+        
+        # 如果apiKey是***，则保持原有的apiKey不变
+        if settings_dict.get('apiKey') == '***':
+            # 读取现有设置中的apiKey
+            if os.path.exists(SETTINGS_FILE):
+                with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                    existing_settings = json.load(f)
+                # 保持原有的apiKey
+                settings_dict['apiKey'] = existing_settings.get('apiKey', '')
+            else:
+                # 如果没有现有设置文件，则设为空字符串
+                settings_dict['apiKey'] = ''
+        
         with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
             json.dump(settings_dict, f, ensure_ascii=False, indent=2)
         return {"success": True, "message": "设置保存成功"}
