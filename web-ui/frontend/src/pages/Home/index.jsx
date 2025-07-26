@@ -43,11 +43,62 @@ const HyperRAGHome = () => {
     const [inputValue, setInputValue] = useState('')
     const [queryMode, setQueryMode] = useState('hyper')
     const [isLoading, setIsLoading] = useState(false)
+    const [availableModes, setAvailableModes] = useState(['llm', 'naive', 'graph', 'hyper', 'hyper-lite'])
 
     // Storage keys
     const STORAGE_KEYS = {
         CONVERSATIONS: 'hyperrag_conversations_v2',
         ACTIVE_ID: 'hyperrag_active_conversation_v2'
+    }
+
+    // 定义所有可用的模式配置
+    const allModes = [
+        { value: 'llm', label: 'LLM', icon: Bot, color: 'bg-yellow-500' },
+        { value: 'naive', label: 'RAG', icon: BookOpen, color: 'bg-blue-500' },
+        { value: 'graph', label: 'Graph-RAG', icon: Bot, color: 'bg-orange-500' },
+        { value: 'hyper', label: 'Hyper-RAG', icon: Zap, color: 'bg-purple-500' },
+        { value: 'hyper-lite', label: 'Hyper-RAG-Lite', icon: Layers, color: 'bg-green-500' }
+    ]
+
+    // 从localStorage加载Mode配置
+    const loadModeSettings = () => {
+        try {
+            const modeSettings = localStorage.getItem('hyperrag_mode_settings')
+            if (modeSettings) {
+                const parsed = JSON.parse(modeSettings)
+                if (parsed.availableModes && Array.isArray(parsed.availableModes) && parsed.availableModes.length > 0) {
+                    setAvailableModes(parsed.availableModes)
+                    // 如果当前选择的mode不在可用列表中，选择第一个可用的mode
+                    if (!parsed.availableModes.includes(queryMode)) {
+                        setQueryMode(parsed.availableModes[0])
+                    }
+                } else {
+                    // 如果没有配置或配置为空，使用默认配置
+                    setAvailableModes(['llm', 'naive', 'graph', 'hyper', 'hyper-lite'])
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load mode settings:', error)
+            // 出错时使用默认配置
+            setAvailableModes(['llm', 'naive', 'graph', 'hyper', 'hyper-lite'])
+        }
+    }
+
+    // 监听localStorage变化
+    const handleStorageChange = (e) => {
+        if (e.key === 'hyperrag_mode_settings') {
+            loadModeSettings()
+        }
+    }
+
+    // 获取当前启用的模式列表
+    const enabledModes = allModes.filter(mode => availableModes.includes(mode.value))
+
+    // 获取模式标签的函数
+    const getModeLabel = (roleValue) => {
+        if (roleValue === 'user') return 'You'
+        const mode = allModes.find(m => m.value === roleValue)
+        return mode ? mode.label : roleValue
     }
 
     // Utility functions
@@ -172,7 +223,7 @@ const HyperRAGHome = () => {
         addMessage(userMessage, 'user')
 
         // Add loading assistant message
-        addMessage('正在思考中...', 'assistant')
+        addMessage('正在思考中...', queryMode)
 
         try {
             const response = await fetch(`${SERVER_URL}/hyperrag/query`, {
@@ -264,6 +315,14 @@ const HyperRAGHome = () => {
         storeGlobalUser.restoreSelectedDatabase()
         storeGlobalUser.loadDatabases()
         loadFromStorage()
+        loadModeSettings()
+
+        // 添加storage事件监听器
+        window.addEventListener('storage', handleStorageChange)
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+        }
     }, [])
 
     useEffect(() => {
@@ -272,6 +331,13 @@ const HyperRAGHome = () => {
         }
     }, [conversations, activeConversationId])
 
+    // 当availableModes变化时，确保当前选择的mode在可用列表中
+    useEffect(() => {
+        if (availableModes.length > 0 && !availableModes.includes(queryMode)) {
+            setQueryMode(availableModes[0])
+        }
+    }, [availableModes, queryMode])
+
     return (
         <div className="flex bg-gray-50">
             {/* Sidebar */}
@@ -279,62 +345,28 @@ const HyperRAGHome = () => {
 
                 {/* Mode Selector - Now prominently displayed */}
 
-                <div className="flex items-center space-x-1 p-3">
+                <div className="flex items-center space-x-1 p-3 text-base">
                     <div className="flex flex-col bg-gray-100 rounded-lg p-1 w-full space-y-1">
                         <div className="flex items-center space-x-2 mb-3">
                             <Settings className="w-5 h-5 shrink-0 text-gray-500" />
-                            <span className="font-medium text-gray-700 text-sm">Mode: </span>
+                            <span className="font-medium text-gray-700 ">Mode: </span>
                         </div>
-                        <button
-                            onClick={() => setQueryMode('llm')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'llm'
-                                ? 'bg-yellow-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <Bot className="w-4 h-4 shrink-0" />
-                            <span>LLM</span>
-                        </button>
-                        <button
-                            onClick={() => setQueryMode('naive')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'naive'
-                                ? ' bg-blue-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <BookOpen className="w-4 h-4 shrink-0" />
-                            <span>RAG</span>
-                        </button>
-                        <button
-                            onClick={() => setQueryMode('graph')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'graph'
-                                ? 'bg-orange-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <Bot className="w-4 h-4 shrink-0" />
-                            <span>Graph-RAG</span>
-                        </button>
-                        <button
-                            onClick={() => setQueryMode('hyper')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'hyper'
-                                ? 'bg-purple-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <Zap className="w-4 h-4 shrink-0" />
-                            <span>Hyper-RAG</span>
-                        </button>
-                        <button
-                            onClick={() => setQueryMode('hyper-lite')}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${queryMode === 'hyper-lite'
-                                ? 'bg-green-500 text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            <Layers className="w-4 h-4 shrink-0" />
-                            <span>Hyper-RAG-Lite</span>
-                        </button>
+                        {enabledModes.map((mode) => {
+                            const IconComponent = mode.icon
+                            return (
+                                <button
+                                    key={mode.value}
+                                    onClick={() => setQueryMode(mode.value)}
+                                    className={`text-base flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all duration-200 cursor-pointer ${queryMode === mode.value
+                                        ? `${mode.color} text-white shadow-md`
+                                        : 'text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <IconComponent className="w-4 h-4 shrink-0" />
+                                    <span>{mode.label}</span>
+                                </button>
+                            )
+                        })}
                     </div>
                 </div>
                 {/* Header */}
@@ -441,7 +473,7 @@ const HyperRAGHome = () => {
                                 </div>
                             </div>
                         ) : (
-                                <div className="space-y-6 mx-auto">
+                            <div className="space-y-6 mx-auto">
                                 {activeConversation?.messages.map((message) => (
                                     <div key={message.id + message.content} className="flex space-x-4">
                                         <Avatar>
@@ -459,7 +491,7 @@ const HyperRAGHome = () => {
                                         <div className="flex-1 space-y-2">
                                             <div className="flex items-center space-x-2">
                                                 <span className="font-medium text-gray-900">
-                                                    {message.role === 'user' ? 'You' : 'Hyper-RAG'}
+                                                    {getModeLabel(message.role)}
                                                 </span>
                                                 <span className="text-xs text-gray-500">
                                                     {new Date(message.timestamp).toLocaleTimeString()}
@@ -470,7 +502,7 @@ const HyperRAGHome = () => {
                                                 ? 'bg-blue-50 border border-blue-200'
                                                 : 'bg-gray-50 border border-gray-200'
                                                 }`}>
-                                                {message.role === 'assistant' ? (
+                                                {message.role !== 'user' ? (
                                                     <div className='flex'>
                                                         <div className="flex-1 prose prose-sm z-0">
                                                             <ReactMarkdown
@@ -494,28 +526,28 @@ const HyperRAGHome = () => {
                                                         <div className='flex-[0.7] overflow-auto pl-2 z-10'>
                                                             {/* 显示检索信息 */}
                                                             <RetrievalInfo
-                                                            entities={message.entities || []}
-                                                            hyperedges={message.hyperedges || []}
-                                                            textUnits={message.text_units || []}
-                                                        />
+                                                                entities={message.entities || []}
+                                                                hyperedges={message.hyperedges || []}
+                                                                textUnits={message.text_units || []}
+                                                            />
 
-                                                        {/* 超图可视化展示 */}
-                                                        {((message.entities && message.entities.length > 0) ||
-                                                            (message.hyperedges && message.hyperedges.length > 0)) && (
-                                                                <div className="mt-4">
-                                                                    <RetrievalHyperGraph
-                                                                        entities={message.entities || []}
-                                                                        hyperedges={message.hyperedges || []}
-                                                                        height="400px"
-                                                                        // showTooltip={true}
-                                                                        graphId={`retrieval-graph-${message.id}`}
-                                                                    />
-                                                                </div>
-                                                            )}
+                                                            {/* 超图可视化展示 */}
+                                                            {((message.entities && message.entities.length > 0) ||
+                                                                (message.hyperedges && message.hyperedges.length > 0)) && (
+                                                                    <div className="mt-4">
+                                                                        <RetrievalHyperGraph
+                                                                            entities={message.entities || []}
+                                                                            hyperedges={message.hyperedges || []}
+                                                                            height="400px"
+                                                                            // showTooltip={true}
+                                                                            graphId={`retrieval-graph-${message.id}`}
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                        <p className="text-gray-900 whitespace-pre-wrap m-0">
+                                                    <p className="text-gray-900 whitespace-pre-wrap m-0">
                                                         {message.content}
                                                     </p>
                                                 )}
@@ -523,7 +555,7 @@ const HyperRAGHome = () => {
                                         </div>
                                     </div>
                                 ))}
-                                </div>
+                            </div>
                         )}
                     </ScrollArea>
 

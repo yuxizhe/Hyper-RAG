@@ -62,3 +62,64 @@ button {
 .ant-pro-layout-content {
     padding: 0 !important;
 }
+
+/* 增大菜单字号 */
+.ant-pro-layout .ant-menu-item,
+.ant-pro-layout .ant-menu-submenu-title {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+}
+
+.ant-pro-layout .ant-menu-submenu .ant-menu-item {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+}
+
+/* 增大侧边栏菜单字号 */
+.ant-pro-sider .ant-menu-item,
+.ant-pro-sider .ant-menu-submenu-title {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    padding: 12px 16px !important;
+}
+
+.ant-pro-sider .ant-menu-submenu .ant-menu-item {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    padding: 10px 16px 10px 32px !important;
+}
+
+/* 增大顶部菜单字号 */
+.ant-pro-layout-header .ant-menu-item,
+.ant-pro-layout-header .ant-menu-submenu-title {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+}
+
+/* 调整菜单图标大小和间距 */
+.ant-pro-layout .ant-menu-item .anticon,
+.ant-pro-layout .ant-menu-submenu-title .anticon {
+    font-size: 18px !important;
+    /* margin-right: 12px !important; */
+}
+
+.ant-pro-sider .ant-menu-item .anticon,
+.ant-pro-sider .ant-menu-submenu-title .anticon {
+    font-size: 18px !important;
+    /* margin-right: 12px !important; */
+}
+
+/* 确保菜单项有足够的点击区域 */
+.ant-pro-layout .ant-menu-item,
+.ant-pro-layout .ant-menu-submenu-title {
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.ant-pro-sider .ant-menu-item,
+.ant-pro-sider .ant-menu-submenu-title {
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+}

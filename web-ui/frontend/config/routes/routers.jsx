@@ -13,7 +13,7 @@ import { Navigate } from 'react-router-dom'
 export const routers = [
   {
     path: '/',
-    element: <Navigate replace to="/Hyper/show" />
+    element: <Navigate replace to="/Hyper/chat" />
   },
   {
     path: '/',
@@ -22,7 +22,7 @@ export const routers = [
     icon: <SmileFilled />,
     children: [
       {
-        path: '/Hyper/qa',
+        path: '/Hyper/chat',
         name: '检索问答',
         icon: <QuestionCircleOutlined />,
         // permissionObj: true,

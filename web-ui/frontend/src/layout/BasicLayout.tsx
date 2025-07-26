@@ -52,7 +52,7 @@ const BasicLayout: React.FC = props => {
         translatedName = t('menu.graph')
       } else if (item?.path === '/Hyper/DB') {
         translatedName = t('menu.database')
-      } else if (item?.path === '/Hyper/qa') {
+      } else if (item?.path === '/Hyper/chat') {
         translatedName = t('menu.home')
       } else if (item?.path === '/Hyper/files') {
         translatedName = t('menu.files')
