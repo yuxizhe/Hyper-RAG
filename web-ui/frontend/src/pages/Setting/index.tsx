@@ -12,7 +12,8 @@ import {
   Alert,
   Row,
   Col,
-  AutoComplete
+  AutoComplete,
+  Checkbox
 } from 'antd'
 import {
   SettingOutlined,
@@ -21,7 +22,8 @@ import {
   ApiOutlined,
   SaveOutlined,
   ReloadOutlined,
-  GlobalOutlined
+  GlobalOutlined,
+  AppstoreOutlined
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../../components/LanguageSelector'
@@ -48,8 +50,19 @@ const Setting: React.FC = () => {
     baseUrl: 'https://api.openai.com/v1',
     selectedDatabase: '',
     maxTokens: 2000,
-    temperature: 0.7
+    temperature: 0.7,
+    // 新增Mode配置，默认显示所有modes
+    availableModes: ['llm', 'naive', 'graph', 'hyper', 'hyper-lite']
   }
+
+  // 可用的查询模式配置
+  const queryModes = [
+    { value: 'llm', label: 'LLM', icon: '🤖', description: '仅使用大语言模型直接回答' },
+    { value: 'naive', label: 'RAG', icon: '📚', description: '基础检索增强生成' },
+    { value: 'graph', label: 'Graph-RAG', icon: '🕸️', description: '基于图结构的检索增强生成' },
+    { value: 'hyper', label: 'Hyper-RAG', icon: '⚡', description: '基于超图的检索增强生成' },
+    { value: 'hyper-lite', label: 'Hyper-RAG-Lite', icon: '🔸', description: '轻量级超图检索增强生成' }
+  ]
 
   // 模型提供商配置
   const modelProviders = [
@@ -83,17 +96,38 @@ const Setting: React.FC = () => {
   const loadSettings = async () => {
     setLoading(true)
     try {
+      // 首先尝试从localStorage加载Mode配置
+      const localModeSettings = localStorage.getItem('hyperrag_mode_settings')
+      let modeSettings = {}
+      if (localModeSettings) {
+        try {
+          modeSettings = JSON.parse(localModeSettings)
+        } catch (e) {
+          console.error('解析本地Mode设置失败:', e)
+        }
+      }
+
       const response = await fetch(`${SERVER_URL}/settings`)
       if (response.ok) {
         const settings = await response.json()
-        form.setFieldsValue({ ...defaultSettings, ...settings })
+        form.setFieldsValue({ ...defaultSettings, ...settings, ...modeSettings })
       } else {
-        // 如果获取失败，使用默认设置
-        form.setFieldsValue(defaultSettings)
+        // 如果获取失败，使用默认设置加上本地Mode设置
+        form.setFieldsValue({ ...defaultSettings, ...modeSettings })
       }
     } catch (error) {
       console.error('加载设置失败:', error)
-      form.setFieldsValue(defaultSettings)
+      // 尝试加载本地Mode设置
+      const localModeSettings = localStorage.getItem('hyperrag_mode_settings')
+      let modeSettings = {}
+      if (localModeSettings) {
+        try {
+          modeSettings = JSON.parse(localModeSettings)
+        } catch (e) {
+          console.error('解析本地Mode设置失败:', e)
+        }
+      }
+      form.setFieldsValue({ ...defaultSettings, ...modeSettings })
       message.warning(t('settings.load_failed'))
     } finally {
       setLoading(false)
@@ -122,25 +156,34 @@ const Setting: React.FC = () => {
   const saveSettings = async (values: any) => {
     setSaveLoading(true)
     try {
+      // 分离Mode设置和其他设置
+      const { availableModes, ...otherSettings } = values
+      
+      // Mode设置保存到localStorage
+      const modeSettings = { availableModes }
+      localStorage.setItem('hyperrag_mode_settings', JSON.stringify(modeSettings))
+
       const response = await fetch(`${SERVER_URL}/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify(otherSettings)
       })
 
       if (response.ok) {
         message.success(t('settings.save_success'))
         // 保存到本地存储作为备份
-        localStorage.setItem('hyperrag_settings', JSON.stringify(values))
+        localStorage.setItem('hyperrag_settings', JSON.stringify(otherSettings))
       } else {
         throw new Error(t('settings.save_failed'))
       }
     } catch (error) {
       console.error('保存设置失败:', error)
       // 即使后端保存失败，也保存到本地存储
-      localStorage.setItem('hyperrag_settings', JSON.stringify(values))
+      const { availableModes, ...otherSettings } = values
+      localStorage.setItem('hyperrag_settings', JSON.stringify(otherSettings))
+      localStorage.setItem('hyperrag_mode_settings', JSON.stringify({ availableModes }))
       message.warning(t('settings.backend_save_failed'))
     } finally {
       setSaveLoading(false)
@@ -221,6 +264,8 @@ const Setting: React.FC = () => {
   const resetSettings = () => {
     form.setFieldsValue(defaultSettings)
     setTestResults({})
+    // 也清除localStorage中的Mode设置
+    localStorage.removeItem('hyperrag_mode_settings')
     message.info(t('settings.reset_success'))
   }
 
@@ -266,6 +311,7 @@ const Setting: React.FC = () => {
               <LanguageSelector />
             </Form.Item>
           </Card>
+
           {/* API 配置区块 */}
           <Card
             title={
@@ -383,6 +429,53 @@ const Setting: React.FC = () => {
               {testResults.api === 'failed' && (
                 <Text type="danger">{t('settings.connection_failed')}</Text>
               )}
+            </Form.Item>
+          </Card>
+
+                    {/* Mode配置区块 */}
+                    <Card
+            title={
+              <span>
+                <AppstoreOutlined style={{ marginRight: '8px' }} />
+                查询模式配置
+              </span>
+            }
+            style={{ marginBottom: '24px' }}
+          >
+            <Alert
+              message="查询模式配置"
+              description="选择在聊天界面中显示的查询模式。配置将保存在本地浏览器中。"
+              type="info"
+              showIcon
+              style={{ marginBottom: '24px' }}
+            />
+
+            <Form.Item
+              name="availableModes"
+              label="可用的查询模式"
+              extra="选择在聊天界面侧边栏中显示的查询模式"
+            >
+              <Checkbox.Group style={{ width: '100%' }}>
+                <Row gutter={[16, 16]}>
+                  {queryModes.map(mode => (
+                    <Col span={12} key={mode.value}>
+                      <Card size="small" style={{ height: '100%' }}>
+                        <Checkbox value={mode.value} style={{ width: '100%' }}>
+                          <div style={{ marginLeft: '8px' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                              <span style={{ marginRight: '6px' }}>{mode.icon}</span>
+                              {mode.label}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                              {mode.description}
+                            </div>
+                          </div>
+                        </Checkbox>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Checkbox.Group>
             </Form.Item>
           </Card>
 
