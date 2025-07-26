@@ -672,6 +672,7 @@ const HyperRAGHome = () => {
                                                                         entities={message.compareResults.mode1.entities || []}
                                                                         hyperedges={message.compareResults.mode1.hyperedges || []}
                                                                         textUnits={message.compareResults.mode1.text_units || []}
+                                                                        mode={message.compareResults.mode1.mode}
                                                                     />
                                                                     
                                                                     {((message.compareResults.mode1.entities && message.compareResults.mode1.entities.length > 0) ||
@@ -681,6 +682,7 @@ const HyperRAGHome = () => {
                                                                                     entities={message.compareResults.mode1.entities || []}
                                                                                     hyperedges={message.compareResults.mode1.hyperedges || []}
                                                                                     height="300px"
+                                                                                    mode={message.compareResults.mode1.mode}
                                                                                     graphId={`compare-graph-1-${message.id}`}
                                                                                 />
                                                                             </div>
@@ -730,11 +732,12 @@ const HyperRAGHome = () => {
                                                             </div>
                                                             
                                                             {message.compareResults.mode2.success && (
-                                                                <div className='flex-[0.7] overflow-auto pl-2'>
+                                                                <div className='overflow-auto pl-2'>
                                                                     <RetrievalInfo
                                                                         entities={message.compareResults.mode2.entities || []}
                                                                         hyperedges={message.compareResults.mode2.hyperedges || []}
                                                                         textUnits={message.compareResults.mode2.text_units || []}
+                                                                        mode={message.compareResults.mode2.mode}
                                                                     />
                                                                     
                                                                     {((message.compareResults.mode2.entities && message.compareResults.mode2.entities.length > 0) ||
@@ -744,6 +747,7 @@ const HyperRAGHome = () => {
                                                                                     entities={message.compareResults.mode2.entities || []}
                                                                                     hyperedges={message.compareResults.mode2.hyperedges || []}
                                                                                     height="300px"
+                                                                                    mode={message.compareResults.mode2.mode}
                                                                                     graphId={`compare-graph-2-${message.id}`}
                                                                                 />
                                                                             </div>
@@ -786,6 +790,7 @@ const HyperRAGHome = () => {
                                                                     entities={message.entities || []}
                                                                     hyperedges={message.hyperedges || []}
                                                                     textUnits={message.text_units || []}
+                                                                    mode={message.role}
                                                                 />
 
                                                                 {/* 超图可视化展示 */}
@@ -796,6 +801,7 @@ const HyperRAGHome = () => {
                                                                                 entities={message.entities || []}
                                                                                 hyperedges={message.hyperedges || []}
                                                                                 height="400px"
+                                                                                mode={message.role}
                                                                                 graphId={`retrieval-graph-${message.id}`}
                                                                             />
                                                                         </div>

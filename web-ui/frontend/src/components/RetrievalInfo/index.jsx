@@ -11,13 +11,14 @@ import {
 const { Panel } = Collapse
 const { Text, Paragraph } = Typography
 
-const RetrievalInfo = ({ entities = [], hyperedges = [], textUnits = [], className = '' }) => {
+const RetrievalInfo = ({ entities = [], hyperedges = [], textUnits = [], className = '', mode = 'hyper' }) => {
     const [activeKey, setActiveKey] = useState([])
 
     // 如果没有任何检索信息，不渲染组件
     if (!entities.length && !hyperedges.length && !textUnits.length) {
         return null
     }
+    let edgesName = mode === 'hyper' ? '超边' : '边'
 
     const renderEntityCard = (entity, index) => (
         <Card
@@ -72,7 +73,7 @@ const RetrievalInfo = ({ entities = [], hyperedges = [], textUnits = [], classNa
             title={
                 <Space>
                     <ShareAltOutlined className="text-green-500" />
-                    <Text strong>超边 #{index + 1}</Text>
+                    <Text strong>{edgesName} #{index + 1}</Text>
                 </Space>
             }
         >
@@ -158,7 +159,7 @@ const RetrievalInfo = ({ entities = [], hyperedges = [], textUnits = [], classNa
             label: (
                 <Space>
                     <ShareAltOutlined className="text-green-500" />
-                    <span>检索到的超边</span>
+                    <span>检索到的{edgesName}</span>
                     <Badge count={hyperedges.length} style={{ backgroundColor: '#52c41a' }} />
                 </Space>
             ),

@@ -21,8 +21,10 @@ const RetrievalHyperGraph = ({
     width = '100%',
     showTooltip = true,
     containerStyle = {},
-    graphId = 'retrieval-hypergraph'
+    graphId = 'retrieval-hypergraph',
+    mode = 'hyper' // 新增mode参数，默认为hyper模式
 }) => {
+    let edgesName = mode === 'hyper' ? '超边' : '边'
     // 转换数据格式为HyperGraph组件需要的格式
     const convertedData = useMemo(() => {
         // 如果没有数据，返回空
@@ -98,46 +100,67 @@ const RetrievalHyperGraph = ({
                 });
             }
 
-            // 创建样式函数
-            const createStyle = (baseColor) => ({
-                fill: baseColor,
-                stroke: baseColor,
-                labelFill: '#fff',
-                labelPadding: 2,
-                labelBackgroundFill: baseColor,
-                labelBackgroundRadius: 5,
-                labelPlacement: 'center',
-                labelAutoRotate: false,
-                // bubblesets配置
-                maxRoutingIterations: 100,
-                maxMarchingIterations: 20,
-                pixelGroup: 4,
-                edgeR0: 10,
-                edgeR1: 60,
-                nodeR0: 15,
-                nodeR1: 50,
-                morphBuffer: 10,
-                threshold: 4,
-                memberInfluenceFactor: 1,
-                edgeInfluenceFactor: 4,
-                nonMemberInfluenceFactor: -0.8,
-                virtualEdges: true,
-            });
-
-            // 添加超边
-            const edgeKeys = Object.keys(convertedData.edges);
-            for (let i = 0; i < edgeKeys.length; i++) {
-                const key = edgeKeys[i];
-                const edge = convertedData.edges[key];
-                const nodes = key.split('|#|');
-
-                plugins.push({
-                    key: `bubble-sets-${key}`,
-                    type: 'bubble-sets',
-                    members: nodes,
-                    labelText: String(edge.keywords || ''), // 确保labelText是字符串
-                    ...createStyle(colors[i % colors.length]),
+            if (mode === 'graph') {
+                // graph模式：设置标准边格式，不使用plugins
+                const edgeKeys = Object.keys(convertedData.edges);
+                for (let i = 0; i < edgeKeys.length; i++) {
+                    const key = edgeKeys[i];
+                    const nodes = key.split('|#|');
+                    
+                    // 为每对节点创建边
+                    for (let j = 0; j < nodes.length; j++) {
+                        for (let k = j + 1; k < nodes.length; k++) {
+                            hyperData.edges.push({
+                                source: nodes[j],
+                                target: nodes[k],
+                                ...convertedData.edges[key]
+                            });
+                        }
+                    }
+                }
+            } else {
+                // hyper模式：使用原有的bubble-sets插件
+                // 创建样式函数
+                const createStyle = (baseColor) => ({
+                    fill: baseColor,
+                    stroke: baseColor,
+                    labelFill: '#fff',
+                    labelPadding: 2,
+                    labelBackgroundFill: baseColor,
+                    labelBackgroundRadius: 5,
+                    labelPlacement: 'center',
+                    labelAutoRotate: false,
+                    // bubblesets配置
+                    maxRoutingIterations: 100,
+                    maxMarchingIterations: 20,
+                    pixelGroup: 4,
+                    edgeR0: 10,
+                    edgeR1: 60,
+                    nodeR0: 15,
+                    nodeR1: 50,
+                    morphBuffer: 10,
+                    threshold: 4,
+                    memberInfluenceFactor: 1,
+                    edgeInfluenceFactor: 4,
+                    nonMemberInfluenceFactor: -0.8,
+                    virtualEdges: true,
                 });
+
+                // 添加超边
+                const edgeKeys = Object.keys(convertedData.edges);
+                for (let i = 0; i < edgeKeys.length; i++) {
+                    const key = edgeKeys[i];
+                    const edge = convertedData.edges[key];
+                    const nodes = key.split('|#|');
+
+                    plugins.push({
+                        key: `bubble-sets-${key}`,
+                        type: 'bubble-sets',
+                        members: nodes,
+                        labelText: String(edge.keywords || ''), // 确保labelText是字符串
+                        ...createStyle(colors[i % colors.length]),
+                    });
+                }
             }
 
             // 添加tooltip插件
@@ -186,9 +209,9 @@ const RetrievalHyperGraph = ({
                 gravity: 20,
                 linkDistance: 10,
             },
-            plugins,
+            plugins: mode === 'graph' ? (showTooltip ? plugins : []) : plugins,
         };
-    }, [convertedData, showTooltip]);
+    }, [convertedData, showTooltip, mode]);
 
     // 如果没有数据，不显示组件
     if (!convertedData || (!entities.length && !hyperedges.length)) {
@@ -207,7 +230,7 @@ const RetrievalHyperGraph = ({
             }}>
                 <span>检索结果可视化</span>
                 <span style={{ fontSize: '12px' }}>
-                    实体: {entities.length} | 超边: {hyperedges.length}
+                    实体: {entities.length} | {edgesName}: {hyperedges.length}
                 </span>
             </div>
             <Graphin
