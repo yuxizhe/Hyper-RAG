@@ -14,6 +14,17 @@ const colors = [
     '#c8ff00',
 ];
 
+
+//  colors 加深
+const entityTypeColors = {
+    'PERSON': '#00C9C9',
+    'CONCEPT': '#a68fff',
+    'ORGANIZATION': '#F08F56',
+    'LOCATION': '#16f69c',
+    'EVENT': '#004ac9',
+    'PRODUCT': '#f056d1',
+}
+
 const RetrievalHyperGraph = ({
     entities = [],
     hyperedges = [],
@@ -157,7 +168,7 @@ const RetrievalHyperGraph = ({
                         key: `bubble-sets-${key}`,
                         type: 'bubble-sets',
                         members: nodes,
-                        labelText: String(edge.keywords || ''), // 确保labelText是字符串
+                        // labelText: String(edge.keywords || ''), // 确保labelText是字符串
                         ...createStyle(colors[i % colors.length]),
                     });
                 }
@@ -191,7 +202,23 @@ const RetrievalHyperGraph = ({
             node: {
                 palette: { field: 'cluster' },
                 style: {
-                    labelText: d => String(d.id), // 确保labelText是字符串
+                    size: mode === 'graph' ? 20 : 25,
+                    labelText: d => d.id,
+                    fill: d => {
+                        
+                        // 根据entity_type设置不同颜色
+                        if (d.entity_type) {
+                            return entityTypeColors[d.entity_type] || '#8566CC';
+                        }
+                        // 默认颜色
+                        return '#8566CC';
+                    },
+                },
+            },
+            edge: {
+                style: {
+                    stroke: '#a68fff', // 边的颜色
+                    lineWidth: 3,
                 }
             },
             animate: false,
@@ -202,10 +229,11 @@ const RetrievalHyperGraph = ({
             ],
             autoFit: 'view',
             layout: {
-                type: 'force',
-                clustering: true,
+                type: 'force-atlas2',
+                // clustering: true,
                 preventOverlap: true,
-                nodeClusterBy: 'entity_type',
+                // nodeClusterBy: 'entity_type',
+                kr: mode === 'graph' ? 5 : 80,
                 gravity: 20,
                 linkDistance: 10,
             },
@@ -228,9 +256,9 @@ const RetrievalHyperGraph = ({
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <span>检索结果可视化</span>
+                <span>检索结果可视化 - {mode}</span>
                 <span style={{ fontSize: '12px' }}>
-                    实体: {entities.length} | {edgesName}: {hyperedges.length}
+                    {edgesName}: {hyperedges.length}
                 </span>
             </div>
             <Graphin

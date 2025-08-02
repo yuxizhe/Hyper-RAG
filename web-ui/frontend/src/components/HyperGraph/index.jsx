@@ -17,6 +17,15 @@ const colors = [
     '#c8ff00',
 ];
 
+const entityTypeColors = {
+    'PERSON': '#00C9C9',
+    'CONCEPT': '#a68fff',
+    'ORGANIZATION': '#F08F56',
+    'LOCATION': '#16f69c',
+    'EVENT': '#004ac9',
+    'PRODUCT': '#f056d1',
+}
+
 const HyperGraph = ({
     vertexId,
     database,
@@ -144,9 +153,25 @@ const HyperGraph = ({
             node: {
                 palette: { field: 'cluster' },
                 style: {
+                    size: 25,
                     labelText: d => d.id,
-                    // fill: d => d.id === vertexId ? '#ff4d4f' : undefined, // 高亮当前查看的顶点
-                    // stroke: d => d.id === vertexId ? '#ff4d4f' : undefined,
+                    fill: d => {
+                        // 如果是当前查看的顶点，使用红色高亮
+                        if (d.id === vertexId) {
+                            return 'black';
+                        }
+                        // 根据entity_type设置不同颜色
+                        if (d.entity_type) {
+                            return entityTypeColors[d.entity_type] || '#8566CC' ;
+                        }
+                        // 默认颜色
+                        return '#8566CC';
+                    },
+                }
+            },
+            edge: {
+                style: {
+                    size: 2,
                 }
             },
             animate: false,
@@ -155,7 +180,7 @@ const HyperGraph = ({
                 'drag-canvas',
                 'drag-element',
             ],
-            autoFit: 'center',
+            autoFit: 'view',
             layout: {
                 type: 'force',
                 clustering: true,
