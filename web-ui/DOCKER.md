@@ -138,16 +138,19 @@ docker-compose build --no-cache backend
 - `nginx.conf`: 反向代理和负载均衡配置
 - `.dockerignore`: 忽略不需要复制到镜像的文件
 
-## build
+
+## 推送
+```bash
+cd frontend
+docker buildx build  --platform linux/amd64,linux/arm64 --build-arg VITE_SERVER_URL=/api  -t yuxizhe/hyper-rag-frontend:latest --push .
+
+cd backend
+docker buildx build  --platform linux/amd64,linux/arm64  -t yuxizhe/hyper-rag-backend:latest --push .
+```
+
+## 本地 build
 
 ```bash
 docker-compose build
 docker-compose up
-
-# 查看构建的镜像
-docker images | grep hyperrag
-
-# 推送到镜像仓库
-docker push yuxizhe/hyper-rag-backend:latest
-docker push yuxizhe/hyper-rag-frontend:latest
 ```
