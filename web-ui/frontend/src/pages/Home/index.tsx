@@ -46,7 +46,7 @@ const HyperRAGHome = () => {
     const [queryMode, setQueryMode] = useState('hyper')
     const [isLoading, setIsLoading] = useState(false)
     const [availableModes, setAvailableModes] = useState(['naive', 'graph', 'hyper'])
-    
+
     // 新增对比模式相关状态
     const [isCompareMode, setIsCompareMode] = useState(false)
     const [compareMode1, setCompareMode1] = useState('hyper')
@@ -103,7 +103,9 @@ const HyperRAGHome = () => {
 
     // 获取模式标签的函数
     const getModeLabel = (roleValue) => {
-        if (roleValue === 'user') return 'You'
+        if (roleValue === 'user') {
+return 'You'
+}
         const mode = allModes.find(m => m.value === roleValue)
         return mode ? mode.label : roleValue
     }
@@ -249,11 +251,13 @@ const HyperRAGHome = () => {
             throw new Error(`Network error: ${response.status}`)
         }
 
-        return await response.json()
+        return response.json()
     }
 
     const handleSubmit = async () => {
-        if (!inputValue.trim() || isLoading) return
+        if (!inputValue.trim() || isLoading) {
+return
+}
 
         const userMessage = inputValue.trim()
         setInputValue('')
@@ -421,8 +425,7 @@ const HyperRAGHome = () => {
                                 </label>
                             </div>
                         </div>
-                        
-                        
+
 
                         {isCompareMode ? (
                             /* 对比模式：显示两个模式选择器 */
@@ -571,7 +574,6 @@ const HyperRAGHome = () => {
                                 placeholder=""
                                 style={{}}
                                 size="small"
-                                onChange={() => { }}
                                 disabled={false}
                             />
                         </div>
@@ -645,7 +647,7 @@ const HyperRAGHome = () => {
                                                                 <span className="text-xs text-red-500">Failed</span>
                                                             )}
                                                         </div>
-                                                        
+
                                                         <div className="flex-1 flex flex-col">
                                                             <div className="flex-1 prose prose-sm">
                                                                 <ReactMarkdown
@@ -666,7 +668,7 @@ const HyperRAGHome = () => {
                                                                     {message.compareResults.mode1.response}
                                                                 </ReactMarkdown>
                                                             </div>
-                                                            
+
                                                             {message.compareResults.mode1.success && (
                                                                 <div className='overflow-auto pl-2'>
                                                                     <RetrievalInfo
@@ -675,7 +677,7 @@ const HyperRAGHome = () => {
                                                                         textUnits={message.compareResults.mode1.text_units || []}
                                                                         mode={message.compareResults.mode1.mode}
                                                                     />
-                                                                    
+
                                                                     {((message.compareResults.mode1.entities && message.compareResults.mode1.entities.length > 0) ||
                                                                         (message.compareResults.mode1.hyperedges && message.compareResults.mode1.hyperedges.length > 0)) && (
                                                                             <div className="mt-4">
@@ -710,7 +712,7 @@ const HyperRAGHome = () => {
                                                                 <span className="text-xs text-red-500">Failed</span>
                                                             )}
                                                         </div>
-                                                        
+
                                                         <div className="flex-1 flex flex-col">
                                                             <div className="flex-1 prose prose-sm">
                                                                 <ReactMarkdown
@@ -731,7 +733,7 @@ const HyperRAGHome = () => {
                                                                     {message.compareResults.mode2.response}
                                                                 </ReactMarkdown>
                                                             </div>
-                                                            
+
                                                             {message.compareResults.mode2.success && (
                                                                 <div className='overflow-auto pl-2'>
                                                                     <RetrievalInfo
@@ -740,7 +742,7 @@ const HyperRAGHome = () => {
                                                                         textUnits={message.compareResults.mode2.text_units || []}
                                                                         mode={message.compareResults.mode2.mode}
                                                                     />
-                                                                    
+
                                                                     {((message.compareResults.mode2.entities && message.compareResults.mode2.entities.length > 0) ||
                                                                         (message.compareResults.mode2.hyperedges && message.compareResults.mode2.hyperedges.length > 0)) && (
                                                                             <div className="mt-4">
@@ -831,7 +833,7 @@ const HyperRAGHome = () => {
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     onKeyPress={handleKeyPress}
-                                    placeholder={isCompareMode 
+                                    placeholder={isCompareMode
                                         ? `对比 ${getModeLabel(compareMode1)} 和 ${getModeLabel(compareMode2)} 的回答...`
                                         : "Ask me anything about your knowledge base..."
                                     }
@@ -859,4 +861,4 @@ const HyperRAGHome = () => {
     )
 }
 
-export default observer(HyperRAGHome) 
+export default observer(HyperRAGHome)

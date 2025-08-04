@@ -35,7 +35,7 @@ const RetrievalHyperGraph = ({
     graphId = 'retrieval-hypergraph',
     mode = 'hyper' // 新增mode参数，默认为hyper模式
 }) => {
-    let edgesName = mode === 'hyper' ? '超边' : '边'
+    const edgesName = mode === 'hyper' ? '超边' : '边'
     // 转换数据格式为HyperGraph组件需要的格式
     const convertedData = useMemo(() => {
         // 如果没有数据，返回空
@@ -95,11 +95,11 @@ const RetrievalHyperGraph = ({
     }, [entities, hyperedges]);
 
     const options = useMemo(() => {
-        let hyperData = {
+        const hyperData = {
             nodes: [],
             edges: [],
         };
-        let plugins = [];
+        const plugins = [];
 
         if (convertedData) {
             // 添加顶点
@@ -117,7 +117,7 @@ const RetrievalHyperGraph = ({
                 for (let i = 0; i < edgeKeys.length; i++) {
                     const key = edgeKeys[i];
                     const nodes = key.split('|#|');
-                    
+
                     // 为每对节点创建边
                     for (let j = 0; j < nodes.length; j++) {
                         for (let k = j + 1; k < nodes.length; k++) {
@@ -205,7 +205,7 @@ const RetrievalHyperGraph = ({
                     size: mode === 'graph' ? 20 : 25,
                     labelText: d => d.id,
                     fill: d => {
-                        
+
                         // 根据entity_type设置不同颜色
                         if (d.entity_type) {
                             return entityTypeColors[d.entity_type] || '#8566CC';
@@ -288,4 +288,4 @@ const RetrievalHyperGraph = ({
     );
 };
 
-export default RetrievalHyperGraph; 
+export default RetrievalHyperGraph;

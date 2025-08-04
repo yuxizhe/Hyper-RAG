@@ -1,3 +1,4 @@
+// @ts-expect-error
 const Koa = require('koa');
 const path = require('path');
 const serve = require('koa-static');

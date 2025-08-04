@@ -40,7 +40,9 @@ const HyperGraph = ({
 
     // 获取vertex邻居数据
     const fetchVertexNeighbor = async (vId, db) => {
-        if (!vId) return;
+        if (!vId) {
+return;
+}
 
         setLoading(true);
         try {
@@ -68,11 +70,11 @@ const HyperGraph = ({
     }, [vertexId, database]);
 
     const options = useMemo(() => {
-        let hyperData = {
+        const hyperData = {
             nodes: [],
             edges: [],
         };
-        let plugins = [];
+        const plugins = [];
 
         if (data) {
             // 添加顶点
@@ -240,4 +242,4 @@ const HyperGraph = ({
     );
 };
 
-export default HyperGraph; 
+export default HyperGraph;

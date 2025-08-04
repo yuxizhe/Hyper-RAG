@@ -9,7 +9,7 @@
     "start:production": "vite --mode production",
     "build": "vite build",
     "preview": "vite preview",
-    "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix  ./",
+    "lint:script": "eslint --ext .ts,.tsx --fix  ./",
     "lint:style": "stylelint --fix  **/*.{css,less,scss}"
   },
   "lint-staged": {
@@ -74,8 +74,8 @@
     "@types/node": "^18.14.5",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
-    "@typescript-eslint/eslint-plugin": "^7.0.2",
-    "@typescript-eslint/parser": "^7.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
     "@vitejs/plugin-react": "^3.1.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.16",

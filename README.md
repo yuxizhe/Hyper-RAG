@@ -153,8 +153,8 @@ You can also change the `mode` parameter to `hyper` or `hyper-lite` to run the H
 We provide a web-based visualization tool for hypergraphs and lightweight Hyper-RAG QA system. For more information, please refer to [Hyper-RAG Web-UI](./web-ui/README.md).
 
 *Note: We welcome any contributions to improve it.*
-![vis-qa](https://github.com/user-attachments/assets/3d4970a8-a52a-46e1-b39d-de8c3caa53e5)
-![vis-hg](https://github.com/user-attachments/assets/9e2fdc5c-56ed-467d-83db-fa447c6c48f3)
+![vis-qa](./assets/vis-QA.png)
+![vis-hg](./assets/vis-hg.png)
 
 ## :whale: Docker Deployment
 
