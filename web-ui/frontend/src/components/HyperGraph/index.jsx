@@ -88,12 +88,12 @@ const HyperGraph = ({
             const createStyle = (baseColor) => ({
                 fill: baseColor,
                 stroke: baseColor,
-                labelFill: '#fff',
-                labelPadding: 2,
-                labelBackgroundFill: baseColor,
-                labelBackgroundRadius: 5,
-                labelPlacement: 'center',
-                labelAutoRotate: false,
+                // labelFill: '#fff',
+                // labelPadding: 2,
+                // labelBackgroundFill: baseColor,
+                // labelBackgroundRadius: 5,
+                // labelPlacement: 'center',
+                // labelAutoRotate: false,
                 // bubblesets配置
                 maxRoutingIterations: 100,
                 maxMarchingIterations: 20,
@@ -121,7 +121,7 @@ const HyperGraph = ({
                     key: `bubble-sets-${key}`,
                     type: 'bubble-sets',
                     members: nodes,
-                    labelText: edge.keywords || '',
+                    // labelText: edge.keywords || '',
                     ...createStyle(colors[i % colors.length]),
                 });
             }

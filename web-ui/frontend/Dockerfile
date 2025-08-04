@@ -11,13 +11,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 # 安装依赖，包括开发依赖（构建需要）
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # 复制源代码
 COPY . .
 
 # 设置构建时环境变量，可以通过构建参数覆盖
-ARG VITE_SERVER_URL=http://backend:8000
+ARG VITE_SERVER_URL=http://localhost:8000
 ENV VITE_SERVER_URL=${VITE_SERVER_URL}
 
 # 构建应用
@@ -34,7 +34,7 @@ WORKDIR /app
 
 # 只安装运行时需要的依赖
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN pnpm install --prod
 
 # 从构建阶段复制构建产物
 COPY --from=builder /app/dist ./dist

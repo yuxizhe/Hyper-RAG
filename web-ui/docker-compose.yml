@@ -2,9 +2,6 @@
 services:
   # 后端服务
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     image: yuxizhe/hyper-rag-backend:latest
     container_name: hyperrag-backend
     volumes:
@@ -17,11 +14,6 @@ services:
 
   # 前端服务
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_SERVER_URL=/api
     image: yuxizhe/hyper-rag-frontend:latest
     container_name: hyperrag-frontend
     depends_on:
