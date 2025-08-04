@@ -196,7 +196,9 @@ const DocumentManager = () => {
   };
 
   const uploadFiles = async (filesToUpload) => {
-    if (filesToUpload.length === 0) return;
+    if (filesToUpload.length === 0) {
+return;
+}
 
     setIsUploading(true);
     const formData = new FormData();
@@ -312,7 +314,9 @@ const DocumentManager = () => {
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+return '0 Bytes';
+}
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

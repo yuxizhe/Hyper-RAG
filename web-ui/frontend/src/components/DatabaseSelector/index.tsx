@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Select, Typography, Space, Button, message, Spin } from 'antd';
+import type { SizeType } from 'antd/es/config-provider/SizeContext';
 import { observer } from 'mobx-react';
 import { DatabaseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { storeGlobalUser } from '../../store/globalUser';
@@ -7,19 +8,29 @@ import { storeGlobalUser } from '../../store/globalUser';
 const { Text } = Typography;
 const { Option } = Select;
 
+interface DatabaseSelectorProps {
+  /** 显示模式：选择器/按钮组/紧凑模式 */
+  mode?: 'select' | 'buttons' | 'compact';
+  /** 是否显示当前数据库信息 */
+  showCurrent?: boolean;
+  /** 是否显示刷新按钮 */
+  showRefresh?: boolean;
+  /** 选择器占位文本 */
+  placeholder?: string;
+  /** 自定义样式 */
+  style?: React.CSSProperties;
+  /** 组件大小 */
+  size?: SizeType;
+  /** 数据库变更回调 */
+  onChange?: (value: string) => void;
+  /** 是否禁用 */
+  disabled?: boolean;
+}
+
 /**
  * 数据库选择组件
- * @param {Object} props
- * @param {'select'|'buttons'|'compact'} props.mode - 显示模式：选择器/按钮组/紧凑模式
- * @param {boolean} props.showCurrent - 是否显示当前数据库信息
- * @param {boolean} props.showRefresh - 是否显示刷新按钮
- * @param {string} props.placeholder - 选择器占位文本
- * @param {Object} props.style - 自定义样式
- * @param {string} props.size - 组件大小 'small'|'middle'|'large'
- * @param {Function} props.onChange - 数据库变更回调
- * @param {boolean} props.disabled - 是否禁用
  */
-const DatabaseSelector = ({
+const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
     mode = 'select',
     showCurrent = true,
     showRefresh = false,
@@ -43,7 +54,7 @@ const DatabaseSelector = ({
     // 处理数据库变更
     const handleDatabaseChange = (value) => {
         storeGlobalUser.setSelectedDatabase(value);
-        onChange && onChange(value);
+        onChange?.(value);
     };
 
     // 刷新数据库列表
@@ -96,7 +107,7 @@ const DatabaseSelector = ({
                         </div>
                     </Option>
                 ))}
-            </Select>   
+            </Select>
 
             {showRefresh && (
                 <Button
@@ -187,4 +198,4 @@ const DatabaseSelector = ({
     }
 };
 
-export default observer(DatabaseSelector); 
+export default observer(DatabaseSelector);

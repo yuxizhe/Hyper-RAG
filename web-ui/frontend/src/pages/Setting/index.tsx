@@ -158,7 +158,7 @@ const Setting: React.FC = () => {
     try {
       // 分离Mode设置和其他设置
       const { availableModes, ...otherSettings } = values
-      
+
       // Mode设置保存到localStorage
       const modeSettings = { availableModes }
       localStorage.setItem('hyperrag_mode_settings', JSON.stringify(modeSettings))

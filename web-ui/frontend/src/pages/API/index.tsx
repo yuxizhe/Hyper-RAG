@@ -55,4 +55,4 @@ const APIPage = () => {
     )
 }
 
-export default APIPage 
+export default APIPage

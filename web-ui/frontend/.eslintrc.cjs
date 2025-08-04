@@ -56,7 +56,7 @@ module.exports = {
     'array-bracket-spacing': 'warn', // 要求数组方括号中使用一致的空格
     'brace-style': 'warn', // 要求在代码块中使用一致的大括号风格
     // indent: ['warn', 2], // 要求使用JS一致缩进4个空格
-    'max-depth': ['warn', 4], // 要求可嵌套的块的最大深度4
+    'max-depth': ['warn', 10], // 要求可嵌套的块的最大深度10
     'max-statements': ['warn', 100], // 要求函数块最多允许的的语句数量20
     'max-nested-callbacks': ['warn', 3], // 要求回调函数最大嵌套深度3
     'max-statements-per-line': ['warn', { max: 1 }], // 要求每一行中所允许的最大语句数量

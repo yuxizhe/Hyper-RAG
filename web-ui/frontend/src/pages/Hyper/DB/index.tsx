@@ -80,7 +80,9 @@ const HyperDB = () => {
 
     // 获取数据
     const fetchData = async (database = storeGlobalUser.selectedDatabase, resetPagination = false) => {
-        if (!database) return;
+        if (!database) {
+return;
+}
 
         setLoading(true);
         console.log('Fetching data from:', SERVER_URL, 'Database:', database);
@@ -587,7 +589,9 @@ const HyperDB = () => {
     // 获取vertices数据
     const fetchVerticesData = async (page = 1, pageSize = 10) => {
         const database = storeGlobalUser.selectedDatabase;
-        if (!database) return;
+        if (!database) {
+return;
+}
 
         setLoading(true);
         try {
@@ -625,7 +629,9 @@ const HyperDB = () => {
     // 获取hyperedges数据
     const fetchHyperedgesData = async (page = 1, pageSize = 10) => {
         const database = storeGlobalUser.selectedDatabase;
-        if (!database) return;
+        if (!database) {
+return;
+}
 
         setLoading(true);
         try {

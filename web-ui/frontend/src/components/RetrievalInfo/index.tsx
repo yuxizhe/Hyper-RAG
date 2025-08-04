@@ -18,7 +18,7 @@ const RetrievalInfo = ({ entities = [], hyperedges = [], textUnits = [], classNa
     if (!entities.length && !hyperedges.length && !textUnits.length) {
         return null
     }
-    let edgesName = mode === 'hyper' ? '超边' : '边'
+    const edgesName = mode === 'hyper' ? '超边' : '边'
 
     const renderEntityCard = (entity, index) => (
         <Card
