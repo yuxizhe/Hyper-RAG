@@ -9,6 +9,7 @@ import Setting from '@/pages/Setting'
 import APIPage from '@/pages/API'
 import { HomeFilled, SmileFilled, FileAddOutlined, QuestionCircleOutlined, DeploymentUnitOutlined, DatabaseOutlined, SettingOutlined, ApiOutlined } from '@ant-design/icons'
 import { Navigate } from 'react-router-dom'
+import Login from '@/pages/Login'
 
 export const routers = [
   {
@@ -21,6 +22,13 @@ export const routers = [
     errorElement: <ErrorPage />,
     icon: <SmileFilled />,
     children: [
+      {
+        path: '/login',
+        name: '登录',
+        hideLayout: true,
+        hideInMenu: true,
+        element: <Login />
+      },
       {
         path: '/Hyper/chat',
         name: '检索问答',

@@ -19,7 +19,13 @@ export enum ComponTypeEnum {
   COMPON
 }
 
-export const GlobalUserInfo = React.createContext<Partial<User.UserEntity>>({})
+type UserEntity = {
+  username?: string
+  icon?: string
+  roles?: any[]
+  menus?: any[]
+}
+export const GlobalUserInfo = React.createContext<Partial<UserEntity>>({})
 
 const BasicLayout: React.FC = props => {
   const { t } = useTranslation()
@@ -87,7 +93,7 @@ const BasicLayout: React.FC = props => {
       label: (
         <div
           onClick={() => {
-            storage.clear()
+            localStorage.clear()
             // navigate('login', { replace: true })
           }}
         >

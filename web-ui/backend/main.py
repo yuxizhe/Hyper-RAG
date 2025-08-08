@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail, db_manager
 from file_manager import file_manager
@@ -10,7 +10,7 @@ import logging
 import sys
 from pathlib import Path
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from io import StringIO
 
 # 添加 HyperRAG 相关导入
@@ -41,6 +41,161 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Hyper-RAG"}
+
+
+# ---------------------- Auth Models & In-Memory Store ----------------------
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlmodel import SQLModel, Field, Session, create_engine, select
+
+SECRET_KEY = os.environ.get("HRAG_SECRET_KEY", "change_me_in_prod")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# Optional scheme for endpoints that don't require auth but adapt if logged-in
+oauth2_optional_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    icon: Optional[str] = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserPublic(BaseModel):
+    username: str
+    icon: Optional[str] = None
+    roles: List[dict] = []
+
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)
+    password_hash: str
+    icon: Optional[str] = ""
+    roles_json: str = "[]"
+
+
+class UserSetting(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)
+    data_json: str = "{}"
+
+# SQLite engine
+DB_PATH = os.environ.get("HRAG_AUTH_DB", "sqlite:///./auth.db")
+engine = create_engine(DB_PATH, echo=False)
+
+@app.on_event("startup")
+def on_startup_create_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> UserPublic:
+    credentials_exception = HTTPException(status_code=401, detail="Could not validate credentials")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.username == username)).first()
+        if not user:
+            raise credentials_exception
+        try:
+            roles = json.loads(user.roles_json or "[]")
+        except Exception:
+            roles = []
+        return UserPublic(username=user.username, icon=user.icon, roles=roles)
+
+
+def get_current_user_optional(token: Optional[str] = Depends(oauth2_optional_scheme)) -> Optional[UserPublic]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+    except JWTError:
+        return None
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.username == username)).first()
+        if not user:
+            return None
+        try:
+            roles = json.loads(user.roles_json or "[]")
+        except Exception:
+            roles = []
+        return UserPublic(username=user.username, icon=user.icon, roles=roles)
+
+
+@app.post("/auth/register", response_model=UserPublic)
+async def register(user: UserCreate):
+    # check exists
+    with Session(engine) as session:
+        existing = session.exec(select(User).where(User.username == user.username)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        roles = [
+            {
+                "id": 5,
+                "name": "超级管理员",
+                "description": "拥有所有查看和操作功能",
+                "adminCount": 0,
+                "status": 1,
+                "sort": 5,
+            }
+        ]
+        db_user = User(
+            username=user.username,
+            password_hash=get_password_hash(user.password),
+            icon=user.icon or "",
+            roles_json=json.dumps(roles),
+        )
+        session.add(db_user)
+        session.commit()
+        return UserPublic(username=db_user.username, icon=db_user.icon, roles=roles)
+
+
+@app.post("/auth/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    with Session(engine) as session:
+        db_user = session.exec(select(User).where(User.username == form_data.username)).first()
+        if not db_user or not verify_password(form_data.password, db_user.password_hash):
+            raise HTTPException(status_code=400, detail="Incorrect username or password")
+        token = create_access_token({"sub": form_data.username})
+        return Token(access_token=token)
+
+
+@app.get("/auth/me", response_model=UserPublic)
+async def me(current_user: UserPublic = Depends(get_current_user)):
+    return current_user
 
 
 @app.get("/db")
@@ -154,7 +309,7 @@ class HyperedgeUpdateModel(BaseModel):
     database: str = None
 
 @app.post("/db/vertices")
-async def create_vertex(vertex: VertexModel):
+async def create_vertex(vertex: VertexModel, current_user: UserPublic = Depends(get_current_user)):
     """
     创建新的vertex
     """
@@ -170,7 +325,7 @@ async def create_vertex(vertex: VertexModel):
         return {"success": False, "message": str(e)}
 
 @app.post("/db/hyperedges")
-async def create_hyperedge(hyperedge: HyperedgeModel):
+async def create_hyperedge(hyperedge: HyperedgeModel, current_user: UserPublic = Depends(get_current_user)):
     """
     创建新的hyperedge
     """
@@ -184,7 +339,7 @@ async def create_hyperedge(hyperedge: HyperedgeModel):
         return {"success": False, "message": str(e)}
 
 @app.put("/db/vertices/{vertex_id}")
-async def update_vertex_endpoint(vertex_id: str, vertex: VertexUpdateModel):
+async def update_vertex_endpoint(vertex_id: str, vertex: VertexUpdateModel, current_user: UserPublic = Depends(get_current_user)):
     """
     更新vertex信息
     """
@@ -201,7 +356,7 @@ async def update_vertex_endpoint(vertex_id: str, vertex: VertexUpdateModel):
         return {"success": False, "message": str(e)}
 
 @app.put("/db/hyperedges/{hyperedge_id}")
-async def update_hyperedge_endpoint(hyperedge_id: str, hyperedge: HyperedgeUpdateModel):
+async def update_hyperedge_endpoint(hyperedge_id: str, hyperedge: HyperedgeUpdateModel, current_user: UserPublic = Depends(get_current_user)):
     """
     更新hyperedge信息
     """
@@ -217,7 +372,7 @@ async def update_hyperedge_endpoint(hyperedge_id: str, hyperedge: HyperedgeUpdat
         return {"success": False, "message": str(e)}
 
 @app.delete("/db/vertices/{vertex_id}")
-async def delete_vertex_endpoint(vertex_id: str, database: str = None):
+async def delete_vertex_endpoint(vertex_id: str, database: str = None, current_user: UserPublic = Depends(get_current_user)):
     """
     删除vertex
     """
@@ -229,7 +384,7 @@ async def delete_vertex_endpoint(vertex_id: str, database: str = None):
         return {"success": False, "message": str(e)}
 
 @app.delete("/db/hyperedges/{hyperedge_id}")
-async def delete_hyperedge_endpoint(hyperedge_id: str, database: str = None):
+async def delete_hyperedge_endpoint(hyperedge_id: str, database: str = None, current_user: UserPublic = Depends(get_current_user)):
     """
     删除hyperedge
     """
@@ -265,15 +420,29 @@ class DatabaseTestModel(BaseModel):
     database: str
 
 @app.get("/settings")
-async def get_settings():
+async def get_settings(current_user: Optional[UserPublic] = Depends(get_current_user_optional)):
     """
     获取系统设置
     """
     try:
+        # 若已登录，则优先从DB读取用户个性化设置
+        if current_user:
+            with Session(engine) as session:
+                s = session.exec(select(UserSetting).where(UserSetting.username == current_user.username)).first()
+                if s and s.data_json:
+                    try:
+                        data = json.loads(s.data_json)
+                        data_safe = data.copy()
+                        if 'apiKey' in data_safe:
+                            data_safe['apiKey'] = '***' if data_safe['apiKey'] else ''
+                        return data_safe
+                    except Exception:
+                        pass
+
+        # 否则读取全局文件设置
         if os.path.exists(SETTINGS_FILE):
             with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
                 settings = json.load(f)
-            # 不返回敏感信息如API Key
             settings_safe = settings.copy()
             if 'apiKey' in settings_safe:
                 settings_safe['apiKey'] = '***' if settings_safe['apiKey'] else ''
@@ -295,28 +464,45 @@ async def get_settings():
         return {"success": False, "message": str(e)}
 
 @app.post("/settings")
-async def save_settings(settings: SettingsModel):
+async def save_settings(settings: SettingsModel, current_user: Optional[UserPublic] = Depends(get_current_user_optional)):
     """
     保存系统设置
     """
     try:
         settings_dict = settings.dict()
         
-        # 如果apiKey是***，则保持原有的apiKey不变
+        # 登录状态：保存到用户级 DB 表
+        if current_user:
+            with Session(engine) as session:
+                existing = session.exec(select(UserSetting).where(UserSetting.username == current_user.username)).first()
+                # 若前端传来 '***'，保留旧的 apiKey
+                if settings_dict.get('apiKey') == '***' and existing:
+                    try:
+                        current_data = json.loads(existing.data_json or '{}')
+                        settings_dict['apiKey'] = current_data.get('apiKey', '')
+                    except Exception:
+                        settings_dict['apiKey'] = ''
+                data_json = json.dumps(settings_dict, ensure_ascii=False)
+                if existing:
+                    existing.data_json = data_json
+                    session.add(existing)
+                else:
+                    session.add(UserSetting(username=current_user.username, data_json=data_json))
+                session.commit()
+            return {"success": True, "message": "设置已保存到用户配置"}
+
+        # 未登录：沿用全局文件保存逻辑
         if settings_dict.get('apiKey') == '***':
-            # 读取现有设置中的apiKey
             if os.path.exists(SETTINGS_FILE):
                 with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
                     existing_settings = json.load(f)
-                # 保持原有的apiKey
                 settings_dict['apiKey'] = existing_settings.get('apiKey', '')
             else:
-                # 如果没有现有设置文件，则设为空字符串
                 settings_dict['apiKey'] = ''
-        
+
         with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
             json.dump(settings_dict, f, ensure_ascii=False, indent=2)
-        return {"success": True, "message": "设置保存成功"}
+        return {"success": True, "message": "设置已保存到全局配置"}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
@@ -570,7 +756,7 @@ class QueryModel(BaseModel):
     database: str = None  # 添加数据库参数
 
 @app.post("/hyperrag/insert")
-async def insert_document(doc: DocumentModel):
+async def insert_document(doc: DocumentModel, current_user: UserPublic = Depends(get_current_user)):
     """
     向指定数据库的 HyperRAG 插入文档
     """
@@ -599,7 +785,7 @@ async def insert_document(doc: DocumentModel):
         return {"success": False, "message": f"Failed to insert document: {str(e)}"}
 
 @app.post("/hyperrag/query")
-async def query_hyperrag(query: QueryModel):
+async def query_hyperrag(query: QueryModel, current_user: UserPublic = Depends(get_current_user)):
     """
     使用指定数据库的 HyperRAG 进行问答查询
     """
@@ -679,7 +865,7 @@ async def get_hyperrag_status(database: str = None):
         return {"success": False, "message": f"Failed to get status: {str(e)}"}
 
 @app.delete("/hyperrag/reset")
-async def reset_hyperrag(database: str = None):
+async def reset_hyperrag(database: str = None, current_user: UserPublic = Depends(get_current_user)):
     """
     重置指定数据库的 HyperRAG 实例，或重置所有实例
     """
@@ -726,7 +912,7 @@ async def get_files():
         raise HTTPException(status_code=500, detail=f"获取文件列表失败: {str(e)}")
 
 @app.post("/files/upload")
-async def upload_files(files: List[UploadFile] = File(...)):
+async def upload_files(files: List[UploadFile] = File(...), current_user: UserPublic = Depends(get_current_user)):
     """
     上传文件接口
     """
@@ -773,7 +959,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
     return {"files": results}
 
 @app.delete("/files/{file_id}")
-async def delete_file(file_id: str):
+async def delete_file(file_id: str, current_user: UserPublic = Depends(get_current_user)):
     """
     删除指定的文件
     """
@@ -787,7 +973,7 @@ async def delete_file(file_id: str):
         raise HTTPException(status_code=500, detail=f"文件删除失败: {str(e)}")
 
 @app.post("/files/embed")
-async def embed_files(request: FileEmbedRequest):
+async def embed_files(request: FileEmbedRequest, current_user: UserPublic = Depends(get_current_user)):
     """
     批量嵌入文档到HyperRAG
     """
@@ -1099,7 +1285,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # 带实时进度通知的文档嵌入接口
 @app.post("/files/embed-with-progress")
-async def embed_files_with_progress(request: FileEmbedRequest):
+async def embed_files_with_progress(request: FileEmbedRequest, current_user: UserPublic = Depends(get_current_user)):
     """
     批量嵌入文档到HyperRAG，带实时进度通知
     """

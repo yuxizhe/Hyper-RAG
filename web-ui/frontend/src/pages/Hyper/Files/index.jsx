@@ -3,9 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 // 服务器URL配置
 import { SERVER_URL } from '../../../utils/index'
+import { storeGlobalUser } from '../../../store/globalUser'
+import { useNavigate } from 'react-router-dom'
 
 const DocumentManager = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [isDragging, setIsDragging] = useState(false);
@@ -208,9 +211,17 @@ return;
     });
 
     try {
+      if (!storeGlobalUser.token) {
+        showNotification('请先登录后再上传文件', 'warning')
+        navigate('/login')
+        return
+      }
       const response = await fetch(`${SERVER_URL}/files/upload`, {
         method: 'POST',
-        body: formData,
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${storeGlobalUser.token}`
+      }
       });
 
       const data = await response.json();
@@ -266,10 +277,16 @@ return;
     setShowLogs(true); // 显示日志面板
 
     try {
+      if (!storeGlobalUser.token) {
+        showNotification('请先登录后再进行嵌入处理', 'warning')
+        navigate('/login')
+        return
+      }
       const response = await fetch(`${SERVER_URL}/files/embed-with-progress`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storeGlobalUser.token}`
         },
         body: JSON.stringify({
           file_ids: Array.from(selectedFiles),
@@ -295,8 +312,16 @@ return;
 
   const handleDeleteFile = async (fileId) => {
     try {
+      if (!storeGlobalUser.token) {
+        showNotification('请先登录后再删除文件', 'warning')
+        navigate('/login')
+        return
+      }
       const response = await fetch(`${SERVER_URL}/files/${fileId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${storeGlobalUser.token}`
+        }
       });
 
       if (response.ok) {

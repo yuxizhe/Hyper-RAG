@@ -13,3 +13,6 @@ websockets
 aiofiles
 PyPDF2
 docx2txt
+passlib[bcrypt]
+python-jose[cryptography]
+sqlmodel
