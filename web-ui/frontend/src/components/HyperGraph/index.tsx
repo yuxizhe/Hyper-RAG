@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Graphin } from '@antv/graphin';
 import { Spin, message } from 'antd';
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
+import { SERVER_URL } from '../../utils';
 
 const colors = [
     '#F6BD16',

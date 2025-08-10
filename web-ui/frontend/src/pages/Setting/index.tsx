@@ -27,12 +27,11 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../../components/LanguageSelector'
+import { SERVER_URL } from '../../utils';
 
 const { Title, Text } = Typography
 const { Option } = Select
 const { Password } = Input
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000'
 
 const Setting: React.FC = () => {
   const { t } = useTranslation()
