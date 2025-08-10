@@ -32,6 +32,7 @@ import { observer } from 'mobx-react';
 import { useTranslation } from 'react-i18next';
 import { storeGlobalUser } from '../../../store/globalUser';
 import DatabaseSelector from '../../../components/DatabaseSelector';
+import { SERVER_URL } from '../../../utils';
 
 const { Text } = Typography;
 import HyperGraph from '../../../components/HyperGraph';
@@ -39,8 +40,6 @@ import HyperGraph from '../../../components/HyperGraph';
 const { TextArea } = Input;
 const { Option } = Select;
 const { TabPane } = Tabs;
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
 
 const HyperDB = () => {
     const { t } = useTranslation();

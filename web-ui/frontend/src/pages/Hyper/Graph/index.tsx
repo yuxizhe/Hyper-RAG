@@ -6,8 +6,7 @@ import { storeGlobalUser } from '../../../store/globalUser';
 import HyperGraph from '../../../components/HyperGraph';
 import DatabaseSelector from '../../../components/DatabaseSelector';
 import { DatabaseOutlined } from '@ant-design/icons';
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+import { SERVER_URL } from '../../../utils';
 
 const GraphPage = () => {
   const { t } = useTranslation();
