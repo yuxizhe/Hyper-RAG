@@ -8,15 +8,21 @@ import asyncio
 import numpy as np
 import logging
 import sys
+import importlib.util
 from pathlib import Path
 from pydantic import BaseModel
 from typing import List
 from io import StringIO
 
 # 添加 HyperRAG 相关导入
+# 若尚不可导入，则向上逐级查找含有 hyperrag 包的目录，并把“其父目录”加到 sys.path
+if importlib.util.find_spec("hyperrag") is None:
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "hyperrag" / "__init__.py").exists():
+            sys.path.insert(0, str(parent))  # 注意是父目录，不是 …/hyperrag
+            break
+
 try:
-    import sys
-    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
     from hyperrag import HyperRAG, QueryParam
     from hyperrag.utils import EmbeddingFunc
     from hyperrag.llm import openai_embedding, openai_complete_if_cache
@@ -24,6 +30,7 @@ try:
 except ImportError as e:
     print(f"HyperRAG not available: {e}")
     HYPERRAG_AVAILABLE = False
+
 
 # 设置文件路径
 SETTINGS_FILE = "settings.json"

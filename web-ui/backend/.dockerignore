@@ -32,3 +32,5 @@ Thumbs.db
 # Docker files
 Dockerfile
 .dockerignore
+settings.json
+file_metadata.json
