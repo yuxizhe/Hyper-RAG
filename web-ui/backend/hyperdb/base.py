@@ -283,3 +283,23 @@ class BaseHypergraphDB:
         Return basic statistics of the hypergraph.
         """
         raise NotImplementedError
+
+    def draw(self, port: int = 8899, open_browser: bool = True):
+        """
+        绘制当前 HyperDB 实例的超图数据
+        
+        Args:
+            port: 服务器端口号，默认为 8899
+            open_browser: 是否自动打开浏览器，默认为 True
+            
+        Returns:
+            HypergraphViewer 实例
+        """
+        from .draw import draw_hypergraph
+        
+        return draw_hypergraph(
+            hypergraph_db=self,
+            port=port,
+            open_browser=open_browser
+        )
+
